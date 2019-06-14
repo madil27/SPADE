@@ -32,8 +32,13 @@ public class Object extends AbstractVertex{
 	/**
      * Empty constructor - initializes an empty map for annotations.
      */
+	
 	public Object(){
-		addAnnotation("type", "Object");
+		this(null);
 	}
 	
+	public Object(String bigHashCode){
+		super(bigHashCode);
+		addAnnotation("type", "Object");
+	}
 }

@@ -33,7 +33,11 @@ public class Subject extends AbstractVertex{
      * Empty constructor - initializes an empty map for annotations.
      */
 	public Subject(){
-		addAnnotation("type", "Subject");
+		this(null);
 	}
 	
+	public Subject(String bigHashCode){
+		super(bigHashCode);
+		addAnnotation("type", "Subject");
+	}
 }

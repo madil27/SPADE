@@ -19,14 +19,14 @@
  */
 package spade.core;
 
-import com.mysql.jdbc.StringUtils;
-import org.apache.commons.codec.digest.DigestUtils;
-
 import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import spade.reporter.audit.OPMConstants;
+import spade.utility.CommonFunctions;
 
 /**
  * This is the class from which other vertex classes (e.g., OPM vertices) are
@@ -50,6 +50,28 @@ public abstract class AbstractVertex implements Serializable
      * An integer indicating the depth of the vertex in the graph
      */
     private int depth;
+
+    /**
+     * String big hash to be returned by bigHashCode function only if not null.
+     * If null then big hash computed using the annotations map.
+     */
+    private final String bigHashCode;
+
+    /**
+     * Create a vertex without a fixed big hash.
+     */
+    public AbstractVertex(){
+    	this(null);
+    }
+
+    /**
+     * Create a vertex with a fixed big hash.
+     * 
+     * @param bigHashCode String
+     */
+    public AbstractVertex(String bigHashCode){
+    	this.bigHashCode = bigHashCode;
+    }
 
     public int getDepth() {
 		return depth;
@@ -86,7 +108,7 @@ public abstract class AbstractVertex implements Serializable
      */
     public final void addAnnotation(String key, String value)
     {
-        if(!StringUtils.isNullOrEmpty(key))
+        if(!CommonFunctions.isNullOrEmpty(key))
         {
             if(value == null)
             {
@@ -107,7 +129,7 @@ public abstract class AbstractVertex implements Serializable
         {
             String key = currentEntry.getKey();
             String value = currentEntry.getValue();
-            if(!StringUtils.isNullOrEmpty(key))
+            if(!CommonFunctions.isNullOrEmpty(key))
             {
                 if(value == null)
                 {
@@ -149,23 +171,42 @@ public abstract class AbstractVertex implements Serializable
     }
 
     /**
-     * Computes MD5 hash of annotations in the vertex.
-     *
-     @return A 128-bit hash digest.
+     * Returns true if the vertex has a fixed big hash otherwise false
+     * 
+     * @return true/false
      */
-    public String bigHashCode()
+    public final boolean isReferenceVertex(){
+    	return bigHashCode != null;
+    }
+    
+    /**
+     * Computes MD5 hash of annotations in the vertex if fixed hash field is null 
+     * else returns the fixed hash field.
+     *
+     @return String
+     */
+    public final String bigHashCode()
     {
-        return DigestUtils.md5Hex(this.toString());
+    	if(bigHashCode == null){
+    		return DigestUtils.md5Hex(this.toString());
+    	}else{
+    		return bigHashCode;
+    	}
     }
 
-
     /**
-     * Computes MD5 hash of annotations in the vertex
-     * @return 16 element byte array of the digest.
+     * Computes MD5 hash of annotations in the vertex if fixed hash field is null
+     * else returns the fixed hash field bytes.
+     * 
+     * @return bytes array
      */
-    public byte[] bigHashCodeBytes()
+    public final byte[] bigHashCodeBytes()
     {
-        return DigestUtils.md5(this.toString());
+    	if(bigHashCode == null){
+    		return DigestUtils.md5(this.toString());
+    	}else{
+    		return bigHashCode.getBytes();
+    	}
     }
 
     public boolean isCompleteNetworkVertex()

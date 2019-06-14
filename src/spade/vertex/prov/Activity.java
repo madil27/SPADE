@@ -17,7 +17,12 @@ public class Activity extends AbstractVertex {
 	 */
 	private static final long serialVersionUID = 5932263768224584090L;
 
-	public Activity() {
-        addAnnotation("type", "Activity");
-    }
+	public Activity(){
+		this(null);
+	}
+	
+	public Activity(String bigHashCode){
+		super(bigHashCode);
+		addAnnotation("type", "Activity");
+	}
 }

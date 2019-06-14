@@ -17,7 +17,12 @@ public class Agent extends AbstractVertex {
 	 */
 	private static final long serialVersionUID = -5661120523683066948L;
 
-	public Agent() {
-        addAnnotation("type", "Agent");
-    }
+	public Agent(){
+		this(null);
+	}
+	
+	public Agent(String bigHashCode){
+		super(bigHashCode);
+		addAnnotation("type", "Agent");
+	}
 }
