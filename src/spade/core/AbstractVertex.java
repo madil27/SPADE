@@ -245,6 +245,7 @@ public abstract class AbstractVertex implements Serializable
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((annotations == null) ? 0 : annotations.hashCode());
+		result = prime * result + ((bigHashCode == null) ? 0 : bigHashCode.hashCode());
 		return result;
 	}
 
@@ -256,11 +257,16 @@ public abstract class AbstractVertex implements Serializable
 			return false;
 		if(getClass() != obj.getClass())
 			return false;
-		AbstractVertex other = (AbstractVertex) obj;
+		AbstractVertex other = (AbstractVertex)obj;
 		if(annotations == null){
 			if(other.annotations != null)
 				return false;
 		}else if(!annotations.equals(other.annotations))
+			return false;
+		if(bigHashCode == null){
+			if(other.bigHashCode != null)
+				return false;
+		}else if(!bigHashCode.equals(other.bigHashCode))
 			return false;
 		return true;
 	}
@@ -270,6 +276,8 @@ public abstract class AbstractVertex implements Serializable
     {
         return "AbstractVertex{" +
                 "annotations=" + annotations +
+                ((isReferenceVertex()) ? (", bigHashCode=" + bigHashCode) : ("")) +
                 '}';
     }
+
 }
