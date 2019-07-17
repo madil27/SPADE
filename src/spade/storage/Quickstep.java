@@ -43,6 +43,7 @@ import spade.core.AbstractEdge;
 import spade.core.AbstractStorage;
 import spade.core.AbstractVertex;
 import spade.core.Graph;
+import spade.core.Settings;
 import spade.query.quickgrail.utility.QuickstepUtil;
 import spade.storage.quickstep.GraphBatch;
 import spade.storage.quickstep.QuickstepClient;
@@ -50,16 +51,18 @@ import spade.storage.quickstep.QuickstepConfiguration;
 import spade.storage.quickstep.QuickstepExecutor;
 import spade.storage.quickstep.QuickstepFailure;
 import spade.utility.CommonFunctions;
-import spade.utility.ExternalMemoryMap;
-import spade.utility.Hasher;
+import spade.utility.Result;
+import spade.utility.map.external.ExternalMap;
+import spade.utility.map.external.ExternalMapArgument;
+import spade.utility.map.external.ExternalMapManager;
 
 public class Quickstep extends AbstractStorage {
   private PrintWriter debugLogWriter = null;
   private long timeExecutionStart;
   private QuickstepConfiguration conf;
 
-  private final String md5MapId = "Quickstep[md5ToIdMap]";
-  private ExternalMemoryMap<String, Integer> md5ToIdMap;
+  private final String md5MapId = "md5ToIdMapId";
+  private ExternalMap<String, Integer> md5ToIdMap;
 
   private long totalNumVerticesProcessed = 0;
   private long totalNumEdgesProcessed = 0;
@@ -388,7 +391,7 @@ public class Quickstep extends AbstractStorage {
 
   @Override
   public boolean initialize(String arguments) {
-    String configFile = CONFIG_PATH + FILE_SEPARATOR + "spade.storage.Quickstep.config";
+    String configFile = Settings.getDefaultConfigFilePath(this.getClass());
     conf = new QuickstepConfiguration(configFile, arguments);
 
     // Initialize log file writer.
@@ -402,30 +405,22 @@ public class Quickstep extends AbstractStorage {
       }
     }
 
-    // Initialize key-value cache.
-    try {
-      md5ToIdMap = CommonFunctions.createExternalMemoryMapInstance(
-          md5MapId,
-          String.valueOf(conf.getCacheSize()),
-          String.valueOf(conf.getCacheBloomfilterFalsePositiveProbability()),
-          String.valueOf(conf.getCacheBloomFilterExpectedNumberOfElements()),
-          conf.getCacheDatabasePath(),
-          conf.getCacheDatabaseName(),
-          null,
-          new Hasher<String>(){
-            @Override
-            public String getHash(String t) {
-              return t;
-            }
-          });
-
-      if (md5ToIdMap == null){
-        logger.log(Level.SEVERE, "NULL external memory map");
-        return false;
-      }
-    } catch(Exception e) {
-      logger.log(Level.SEVERE, "Failed to create external memory map", e);
-      return false;
+    Result<ExternalMapArgument> mapArgumentParseResult = ExternalMapManager.parseArgumentFromFile(md5MapId, configFile);
+    if(mapArgumentParseResult.error){
+	logger.log(Level.SEVERE, "Failed to parse argument for external map: '" + md5MapId + "'");
+	logger.log(Level.SEVERE, mapArgumentParseResult.toErrorString());
+	return false;
+    }else{
+	ExternalMapArgument mapArgument = mapArgumentParseResult.result;
+	Result<ExternalMap<String, Integer>> mapCreateResult = ExternalMapManager.create(mapArgument);
+	if(mapCreateResult.error){
+		logger.log(Level.SEVERE, "Failed to create external map '"+md5MapId+"' from arguments: " + mapArgument);
+		logger.log(Level.SEVERE, mapCreateResult.toErrorString());
+		return false;
+	}else{
+		logger.log(Level.INFO, md5MapId + ": " + mapArgument);
+		md5ToIdMap = mapCreateResult.result;
+	}
     }
 
     // Initialize Quickstep async executor.
@@ -467,7 +462,7 @@ public class Quickstep extends AbstractStorage {
     }
     copyManager.shutdown();
     if(md5ToIdMap != null){
-      CommonFunctions.closePrintSizeAndDeleteExternalMemoryMap(md5MapId, md5ToIdMap);
+      md5ToIdMap.close();
       md5ToIdMap = null;
     }
     qs.shutdown();
