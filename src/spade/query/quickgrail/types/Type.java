@@ -19,6 +19,8 @@
  */
 package spade.query.quickgrail.types;
 
+import spade.query.quickgrail.types.TypeID;
+
 /**
  * Simple type system for dealing with QuickGrail expressions.
  */

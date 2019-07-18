@@ -19,11 +19,14 @@
  */
 package spade.query.quickgrail.types;
 
+import spade.query.quickgrail.types.Type;
+
 public class TypedValue {
-  private Type type;
+    private spade.query.quickgrail.types.Type type;
   private Object value;
 
-  public TypedValue(Type type, Object value) {
+    public TypedValue(spade.query.quickgrail.types.Type type, Object value)
+    {
     this.type = type;
     this.value = value;
   }

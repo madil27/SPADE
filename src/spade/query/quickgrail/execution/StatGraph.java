@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Show statistics of a graph.
  */
-public class StatGraph extends Instruction {
+public class StatGraph extends Instruction
+{
   private Graph targetGraph;
 
   public StatGraph(Graph targetGraph) {

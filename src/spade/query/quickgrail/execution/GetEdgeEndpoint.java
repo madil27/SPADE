@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Get end points of all edges in a graph.
  */
-public class GetEdgeEndpoint extends Instruction {
+public class GetEdgeEndpoint extends Instruction
+{
   public enum Component {
     kSource,
     kDestination,

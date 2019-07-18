@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import spade.query.quickgrail.kernel.Environment;
+import spade.query.quickgrail.kernel.Program;
 import spade.query.quickgrail.entities.Entity;
 import spade.query.quickgrail.entities.EntityType;
 import spade.query.quickgrail.entities.Graph;
@@ -71,7 +73,7 @@ import spade.query.quickgrail.types.TypedValue;
  */
 public class Resolver {
   private ArrayList<Instruction> instructions;
-  private Environment env;
+    private spade.query.quickgrail.kernel.Environment env;
 
   class ExpressionStream {
     private ArrayList<ParseExpression> stream;
@@ -134,8 +136,9 @@ public class Resolver {
    * QuickGrail queries) into a low-level program (a list of primitive
    * instructions ready to be executed).
    */
-  public Program resolveProgram(ParseProgram parseProgram,
-                                Environment env) {
+  public spade.query.quickgrail.kernel.Program resolveProgram(ParseProgram parseProgram,
+                                                              spade.query.quickgrail.kernel.Environment env)
+  {
     // Initialize
     this.instructions = new ArrayList<Instruction>();
     this.env = env;
@@ -145,7 +148,7 @@ public class Resolver {
       resolveStatement(parseStatement);
     }
 
-    Program program = new Program(instructions, env);
+      spade.query.quickgrail.kernel.Program program = new Program(instructions, env);
 
     // Cleanup and return.
     this.instructions = null;
@@ -203,7 +206,8 @@ public class Resolver {
       Graph lhsGraph = new Graph(lhsGraphName);
       switch (atype) {
         case kPlusEqual: {
-          if (!Environment.IsBaseGraph(lhsGraph)) {
+            if(!spade.query.quickgrail.kernel.Environment.IsBaseGraph(lhsGraph))
+            {
             resultGraph = lhsGraph;
           } else {
             resultGraph = allocateEmptyGraph();
@@ -676,7 +680,8 @@ public class Resolver {
       StringBuilder sqlQuery = new StringBuilder();
       sqlQuery.append("INSERT INTO " + outputGraph.getTableName(component) +
                       " SELECT id FROM "+ Graph.GetBaseAnnotationTableName(component));
-      if (!Environment.IsBaseGraph(subjectGraph)) {
+        if(!spade.query.quickgrail.kernel.Environment.IsBaseGraph(subjectGraph))
+        {
         String analyzeQuery =
             "\\analyzerange " + subjectGraph.getTableName(component) + "\n";
         instructions.add(new EvaluateQuery(analyzeQuery));

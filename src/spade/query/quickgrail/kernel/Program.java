@@ -32,7 +32,7 @@ import spade.storage.quickstep.QuickstepExecutor;
  */
 public class Program extends TreeStringSerializable {
   private ArrayList<Instruction> instructions;
-  private Environment environment;
+    private spade.query.quickgrail.kernel.Environment environment;
 
   public Program(ArrayList<Instruction> instructions, Environment environment) {
     this.instructions = instructions;

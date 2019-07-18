@@ -36,7 +36,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * List all existing graphs in QuickGrail storage.
  */
-public class ListGraphs extends Instruction {
+public class ListGraphs extends Instruction
+{
   private String style;
 
   public ListGraphs(String style) {

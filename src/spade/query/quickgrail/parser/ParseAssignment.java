@@ -21,9 +21,13 @@ package spade.query.quickgrail.parser;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.parser.ParseExpression;
+import spade.query.quickgrail.parser.ParseStatement;
+import spade.query.quickgrail.parser.ParseVariable;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
-public class ParseAssignment extends ParseStatement {
+public class ParseAssignment extends spade.query.quickgrail.parser.ParseStatement
+{
   public enum AssignmentType {
     kEqual,
     kPlusEqual,
@@ -44,13 +48,14 @@ public class ParseAssignment extends ParseStatement {
   }
 
   private AssignmentType assignmentType;
-  private ParseVariable lhs;
-  private ParseExpression rhs;
+    private spade.query.quickgrail.parser.ParseVariable lhs;
+    private spade.query.quickgrail.parser.ParseExpression rhs;
 
   public ParseAssignment(int lineNumber, int columnNumber,
                          AssignmentType assignmentType,
-                         ParseVariable lhs,
-                         ParseExpression rhs) {
+                         spade.query.quickgrail.parser.ParseVariable lhs,
+                         spade.query.quickgrail.parser.ParseExpression rhs)
+  {
     super(lineNumber, columnNumber, ParseStatement.StatementType.kAssignment);
     this.assignmentType = assignmentType;
     this.lhs = lhs;

@@ -21,12 +21,15 @@ package spade.query.quickgrail.entities;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.entities.Entity;
+import spade.query.quickgrail.entities.EntityType;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
 /**
  * Intermediate representation for a graph in QuickGrail optimizer.
  */
-public class Graph extends Entity {
+public class Graph extends Entity
+{
   public enum Component {
     kVertex,
     kEdge
@@ -82,7 +85,8 @@ public class Graph extends Entity {
   }
 
   @Override
-  public EntityType getEntityType() {
+  public spade.query.quickgrail.entities.EntityType getEntityType()
+  {
     return EntityType.kGraph;
   }
 

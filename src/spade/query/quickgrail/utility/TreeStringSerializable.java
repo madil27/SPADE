@@ -40,9 +40,9 @@ public abstract class TreeStringSerializable {
     ArrayList<String> inline_field_names = new ArrayList<String>();
     ArrayList<String> inline_field_values = new ArrayList<String>();
     ArrayList<String> non_container_child_field_names = new ArrayList<String>();
-    ArrayList<TreeStringSerializable> non_container_child_fields = new ArrayList<TreeStringSerializable>();
+      ArrayList<spade.query.quickgrail.utility.TreeStringSerializable> non_container_child_fields = new ArrayList<spade.query.quickgrail.utility.TreeStringSerializable>();
     ArrayList<String> container_child_field_names = new ArrayList<String>();
-    ArrayList<ArrayList<? extends TreeStringSerializable>> container_child_fields = new ArrayList<ArrayList<? extends TreeStringSerializable>>();
+      ArrayList<ArrayList<? extends spade.query.quickgrail.utility.TreeStringSerializable>> container_child_fields = new ArrayList<ArrayList<? extends spade.query.quickgrail.utility.TreeStringSerializable>>();
 
     getFieldStringItems(inline_field_names, inline_field_values,
         non_container_child_field_names, non_container_child_fields,
@@ -53,21 +53,21 @@ public abstract class TreeStringSerializable {
   }
 
   protected abstract void getFieldStringItems(
-      ArrayList<String> inline_field_names,
-      ArrayList<String> inline_field_values,
-      ArrayList<String> non_container_child_field_names,
-      ArrayList<TreeStringSerializable> non_container_child_fields,
-      ArrayList<String> container_child_field_names,
-      ArrayList<ArrayList<? extends TreeStringSerializable>> container_child_fields);
+          ArrayList<String> inline_field_names,
+          ArrayList<String> inline_field_values,
+          ArrayList<String> non_container_child_field_names,
+          ArrayList<spade.query.quickgrail.utility.TreeStringSerializable> non_container_child_fields,
+          ArrayList<String> container_child_field_names,
+          ArrayList<ArrayList<? extends spade.query.quickgrail.utility.TreeStringSerializable>> container_child_fields);
 
   protected String getNodeString(boolean is_root, boolean is_last,
       String parent_prefix, String node_name) {
     ArrayList<String> inline_field_names = new ArrayList<String>();
     ArrayList<String> inline_field_values = new ArrayList<String>();
     ArrayList<String> non_container_child_field_names = new ArrayList<String>();
-    ArrayList<TreeStringSerializable> non_container_child_fields = new ArrayList<TreeStringSerializable>();
+      ArrayList<spade.query.quickgrail.utility.TreeStringSerializable> non_container_child_fields = new ArrayList<spade.query.quickgrail.utility.TreeStringSerializable>();
     ArrayList<String> container_child_field_names = new ArrayList<String>();
-    ArrayList<ArrayList<? extends TreeStringSerializable>> container_child_fields = new ArrayList<ArrayList<? extends TreeStringSerializable>>();
+      ArrayList<ArrayList<? extends spade.query.quickgrail.utility.TreeStringSerializable>> container_child_fields = new ArrayList<ArrayList<? extends spade.query.quickgrail.utility.TreeStringSerializable>>();
 
     getFieldStringItems(inline_field_names, inline_field_values,
         non_container_child_field_names, non_container_child_fields,
@@ -83,7 +83,7 @@ public abstract class TreeStringSerializable {
 
     int last_index = non_container_child_fields.size() - 1;
     for (int i = 0; i < last_index; i++) {
-      TreeStringSerializable node = non_container_child_fields.get(i);
+        spade.query.quickgrail.utility.TreeStringSerializable node = non_container_child_fields.get(i);
       if (node == null) {
         node = null_node;
       }
@@ -93,7 +93,7 @@ public abstract class TreeStringSerializable {
 
     if (!non_container_child_fields.isEmpty()) {
       if (container_child_fields.isEmpty()) {
-        TreeStringSerializable node = non_container_child_fields
+          spade.query.quickgrail.utility.TreeStringSerializable node = non_container_child_fields
             .get(last_index);
         if (node == null) {
           node = null_node;
@@ -102,7 +102,7 @@ public abstract class TreeStringSerializable {
             non_container_child_field_names.get(last_index)));
 
       } else {
-        TreeStringSerializable node = non_container_child_fields
+          spade.query.quickgrail.utility.TreeStringSerializable node = non_container_child_fields
             .get(last_index);
         if (node == null) {
           node = null_node;
@@ -128,7 +128,8 @@ public abstract class TreeStringSerializable {
   }
 
   protected String GetNodeListString(boolean is_last, String prefix,
-      String node_name, ArrayList<? extends TreeStringSerializable> node_list) {
+                                     String node_name, ArrayList<? extends spade.query.quickgrail.utility.TreeStringSerializable> node_list)
+  {
     StringBuffer ret = new StringBuffer();
     String item_prefix = prefix;
     if (!node_name.isEmpty()) {
@@ -249,7 +250,8 @@ public abstract class TreeStringSerializable {
   }
 }
 
-class NullNode extends TreeStringSerializable {
+class NullNode extends spade.query.quickgrail.utility.TreeStringSerializable
+{
   @Override
   public String getLabel() {
     return "null";
@@ -257,11 +259,12 @@ class NullNode extends TreeStringSerializable {
 
   @Override
   protected void getFieldStringItems(
-      ArrayList<String> inline_field_names,
-      ArrayList<String> inline_field_values,
-      ArrayList<String> non_container_child_field_names,
-      ArrayList<TreeStringSerializable> non_container_child_fields,
-      ArrayList<String> container_child_field_names,
-      ArrayList<ArrayList<? extends TreeStringSerializable>> container_child_fields) {
+          ArrayList<String> inline_field_names,
+          ArrayList<String> inline_field_values,
+          ArrayList<String> non_container_child_field_names,
+          ArrayList<spade.query.quickgrail.utility.TreeStringSerializable> non_container_child_fields,
+          ArrayList<String> container_child_field_names,
+          ArrayList<ArrayList<? extends spade.query.quickgrail.utility.TreeStringSerializable>> container_child_fields)
+  {
   }
 }

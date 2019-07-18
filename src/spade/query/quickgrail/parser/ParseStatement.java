@@ -19,7 +19,10 @@
  */
 package spade.query.quickgrail.parser;
 
-public abstract class ParseStatement extends ParseTreeNode {
+import spade.query.quickgrail.parser.ParseTreeNode;
+
+public abstract class ParseStatement extends ParseTreeNode
+{
   public enum StatementType {
     kAssignment,
     kCommand

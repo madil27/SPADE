@@ -35,7 +35,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Export a QuickGrail graph to spade.core.Graph or to DOT representation.
  */
-public class ExportGraph extends Instruction {
+public class ExportGraph extends Instruction
+{
   private static final int kNonForceExportLimit = 4096;
 
   private Graph targetGraph;
@@ -107,7 +108,8 @@ public class ExportGraph extends Instruction {
   }
 
   private HashMap<Integer, AbstractVertex> exportVertices(
-      QuickstepExecutor qs, String targetVertexTable) {
+          QuickstepExecutor qs, String targetVertexTable)
+  {
     HashMap<Integer, AbstractVertex> vertices = new HashMap<Integer, AbstractVertex>();
     long numVertices = qs.executeQueryForLongResult(
         "COPY SELECT COUNT(*) FROM " + targetVertexTable + " TO stdout;");
@@ -138,7 +140,8 @@ public class ExportGraph extends Instruction {
   }
 
   private HashMap<Long, AbstractEdge> exportEdges(
-      QuickstepExecutor qs, String targetEdgeTable) {
+          QuickstepExecutor qs, String targetEdgeTable)
+  {
     HashMap<Long, AbstractEdge> edges = new HashMap<Long, AbstractEdge>();
 
     long numEdges = qs.executeQueryForLongResult(

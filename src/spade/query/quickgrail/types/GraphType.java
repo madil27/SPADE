@@ -19,20 +19,25 @@
  */
 package spade.query.quickgrail.types;
 
+import spade.query.quickgrail.types.Type;
+import spade.query.quickgrail.types.TypeID;
 import spade.query.quickgrail.entities.Graph;
 
-public class GraphType extends Type {
-  static private GraphType instance;
+public class GraphType extends Type
+{
+    static private spade.query.quickgrail.types.GraphType instance;
 
-  public static GraphType GetInstance() {
+    public static spade.query.quickgrail.types.GraphType GetInstance()
+    {
     if (instance == null) {
-      instance = new GraphType();
+        instance = new spade.query.quickgrail.types.GraphType();
     }
     return instance;
   }
 
   @Override
-  public TypeID getTypeID() {
+  public spade.query.quickgrail.types.TypeID getTypeID()
+  {
     return TypeID.kGraph;
   }
 

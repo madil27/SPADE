@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * This class is not yet used in the SPADE integrated QuickGrail.
  */
-public class OverwriteGraphMetadata extends Instruction {
+public class OverwriteGraphMetadata extends Instruction
+{
   private GraphMetadata targetMetadata;
   private GraphMetadata lhsMetadata;
   private GraphMetadata rhsMetadata;

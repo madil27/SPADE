@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Collapse all edges whose specified fields are the same.
  */
-public class CollapseEdge extends Instruction {
+public class CollapseEdge extends Instruction
+{
   // Input graph.
   private Graph targetGraph;
   // Output graph.

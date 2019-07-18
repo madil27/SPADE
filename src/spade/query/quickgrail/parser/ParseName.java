@@ -21,12 +21,16 @@ package spade.query.quickgrail.parser;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.parser.ParseExpression;
+import spade.query.quickgrail.parser.ParseString;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
-public class ParseName extends ParseExpression {
-  private ParseString name;
+public class ParseName extends spade.query.quickgrail.parser.ParseExpression
+{
+    private spade.query.quickgrail.parser.ParseString name;
 
-  public ParseName(int lineNumber, int columnNumber, ParseString name) {
+    public ParseName(int lineNumber, int columnNumber, spade.query.quickgrail.parser.ParseString name)
+    {
     super(lineNumber, columnNumber, ParseExpression.ExpressionType.kName);
     this.name = name;
   }

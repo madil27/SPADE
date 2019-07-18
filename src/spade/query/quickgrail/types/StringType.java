@@ -19,18 +19,24 @@
  */
 package spade.query.quickgrail.types;
 
-public class StringType extends Type {
-  static private StringType instance;
+import spade.query.quickgrail.types.Type;
+import spade.query.quickgrail.types.TypeID;
 
-  public static StringType GetInstance() {
+public class StringType extends Type
+{
+    static private spade.query.quickgrail.types.StringType instance;
+
+    public static spade.query.quickgrail.types.StringType GetInstance()
+    {
     if (instance == null) {
-      instance = new StringType();
+        instance = new spade.query.quickgrail.types.StringType();
     }
     return instance;
   }
 
   @Override
-  public TypeID getTypeID() {
+  public spade.query.quickgrail.types.TypeID getTypeID()
+  {
     return TypeID.kString;
   }
 

@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Subtract one graph from the other.
  */
-public class SubtractGraph extends Instruction {
+public class SubtractGraph extends Instruction
+{
   // Output graph.
   private Graph outputGraph;
   // Minuend graph.

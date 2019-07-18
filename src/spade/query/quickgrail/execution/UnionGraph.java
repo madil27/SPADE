@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Union one graph into the other.
  */
-public class UnionGraph extends Instruction {
+public class UnionGraph extends Instruction
+{
   // The target graph.
   private Graph targetGraph;
   // The source graph to be unioned into the target graph.

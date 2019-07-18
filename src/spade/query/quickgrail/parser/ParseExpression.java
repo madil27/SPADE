@@ -19,7 +19,10 @@
  */
 package spade.query.quickgrail.parser;
 
-public abstract class ParseExpression extends ParseTreeNode {
+import spade.query.quickgrail.parser.ParseTreeNode;
+
+public abstract class ParseExpression extends ParseTreeNode
+{
   public enum ExpressionType {
     kLiteral,
     kName,

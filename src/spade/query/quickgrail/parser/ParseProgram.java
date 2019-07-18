@@ -21,14 +21,17 @@ package spade.query.quickgrail.parser;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.parser.ParseStatement;
+import spade.query.quickgrail.parser.ParseTreeNode;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
-public class ParseProgram extends ParseTreeNode {
-  private ArrayList<ParseStatement> statements;
+public class ParseProgram extends ParseTreeNode
+{
+    private ArrayList<spade.query.quickgrail.parser.ParseStatement> statements;
 
   public ParseProgram(int lineNumber, int columnNumber) {
     super(lineNumber, columnNumber);
-    this.statements = new ArrayList<ParseStatement>();
+      this.statements = new ArrayList<spade.query.quickgrail.parser.ParseStatement>();
   }
 
   @Override
@@ -36,7 +39,8 @@ public class ParseProgram extends ParseTreeNode {
     return "Program";
   }
 
-  public void addStatement(ParseStatement statement) {
+    public void addStatement(spade.query.quickgrail.parser.ParseStatement statement)
+    {
     statements.add(statement);
   }
 

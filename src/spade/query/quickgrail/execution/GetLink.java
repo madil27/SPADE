@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Similar to GetPath but treats the graph edges as indirected.
  */
-public class GetLink extends Instruction {
+public class GetLink extends Instruction
+{
   // Output graph.
   private Graph targetGraph;
   // Input graph.

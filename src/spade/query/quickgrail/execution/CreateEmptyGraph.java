@@ -21,7 +21,9 @@ package spade.query.quickgrail.execution;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.execution.ExecutionContext;
 import spade.query.quickgrail.entities.Graph;
+import spade.query.quickgrail.execution.Instruction;
 import spade.query.quickgrail.kernel.Environment;
 import spade.query.quickgrail.utility.QuickstepUtil;
 import spade.query.quickgrail.utility.TreeStringSerializable;
@@ -29,7 +31,8 @@ import spade.query.quickgrail.utility.TreeStringSerializable;
 /**
  * Create an empty QuickGrail graph.
  */
-public class CreateEmptyGraph extends Instruction {
+public class CreateEmptyGraph extends Instruction
+{
   // Output graph.
   private Graph graph;
 

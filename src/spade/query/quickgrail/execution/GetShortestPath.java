@@ -32,7 +32,8 @@ import spade.storage.quickstep.QuickstepExecutor;
  *
  * Warning: This operation could be very slow when the input graph is large.
  */
-public class GetShortestPath extends Instruction {
+public class GetShortestPath extends Instruction
+{
   // Output graph.
   private Graph targetGraph;
   // Input graph.

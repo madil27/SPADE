@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Remove all duplicated vertices and edges.
  */
-public class DistinctifyGraph extends Instruction {
+public class DistinctifyGraph extends Instruction
+{
   // Input graph.
   private Graph targetGraph;
   // Output graph.

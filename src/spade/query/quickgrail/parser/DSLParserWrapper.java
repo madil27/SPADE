@@ -25,26 +25,32 @@ import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import spade.query.quickgrail.parser.DSLLexer;
+import spade.query.quickgrail.parser.DSLParser;
+import spade.query.quickgrail.parser.ParseProgram;
 
 public class DSLParserWrapper {
-  public ParseProgram fromText(String text) {
+    public spade.query.quickgrail.parser.ParseProgram fromText(String text)
+    {
     CharStream input = CharStreams.fromString(text);
     return fromCharStream(input);
   }
 
-  public ParseProgram fromFile(String filename) throws IOException {
+    public spade.query.quickgrail.parser.ParseProgram fromFile(String filename) throws IOException
+    {
     CharStream input = CharStreams.fromFileName(filename);
     return fromCharStream(input);
   }
 
-  public ParseProgram fromStdin() throws IOException {
+    public spade.query.quickgrail.parser.ParseProgram fromStdin() throws IOException
+    {
     CharStream input = CharStreams.fromStream(System.in);
     return fromCharStream(input);
   }
 
   private ParseProgram fromCharStream(CharStream input) {
-    DSLLexer lexer = new DSLLexer(input);
-    DSLParser parser = new DSLParser(new CommonTokenStream(lexer));
+      spade.query.quickgrail.parser.DSLLexer lexer = new DSLLexer(input);
+      spade.query.quickgrail.parser.DSLParser parser = new DSLParser(new CommonTokenStream(lexer));
     parser.setErrorHandler(new BailErrorStrategy());
     return parser.program().r;
   }

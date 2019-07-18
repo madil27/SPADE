@@ -21,19 +21,25 @@ package spade.query.quickgrail.parser;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.parser.ParseExpression;
+import spade.query.quickgrail.parser.ParseStatement;
+import spade.query.quickgrail.parser.ParseString;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
-public class ParseCommand extends ParseStatement {
-  private ParseString commandName;
-  private ArrayList<ParseExpression> arguments;
+public class ParseCommand extends spade.query.quickgrail.parser.ParseStatement
+{
+    private spade.query.quickgrail.parser.ParseString commandName;
+    private ArrayList<spade.query.quickgrail.parser.ParseExpression> arguments;
 
-  public ParseCommand(int lineNumber, int columnNumber, ParseString commandName) {
+    public ParseCommand(int lineNumber, int columnNumber, spade.query.quickgrail.parser.ParseString commandName)
+    {
     super(lineNumber, columnNumber, ParseStatement.StatementType.kCommand);
     this.commandName = commandName;
-    this.arguments = new ArrayList<ParseExpression>();
+        this.arguments = new ArrayList<spade.query.quickgrail.parser.ParseExpression>();
   }
 
-  public void addArgument(ParseExpression argument) {
+    public void addArgument(spade.query.quickgrail.parser.ParseExpression argument)
+    {
     arguments.add(argument);
   }
 

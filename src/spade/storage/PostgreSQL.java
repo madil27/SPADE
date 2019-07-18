@@ -71,6 +71,9 @@ public class PostgreSQL extends SQL
     private ArrayList<String> edgeColumnNames = new ArrayList<>();
     private ArrayList<String> vertexColumnNames = new ArrayList<>();
 
+    private String TRACE_BASE_VERTEX = "trace_base_vertex";
+    private String TRACE_BASE_EDGE = "trace_base_edge";
+
 
     public PostgreSQL()
     {
@@ -196,6 +199,24 @@ public class PostgreSQL extends SQL
                 edgeColumnNames.add(colName);
                 edgeAnnotations.add(colName);
             }
+
+            String createTraceBaseVertex = "CREATE TABLE IF NOT EXISTS "
+                    + TRACE_BASE_VERTEX
+                    + "(\""
+                    + PRIMARY_KEY
+                    + "\""
+                    + " UUID"
+                    + ")";
+            dbStatement.execute(createTraceBaseVertex);
+
+            String createTraceBaseEdge = "CREATE TABLE IF NOT EXISTS "
+                    + TRACE_BASE_EDGE
+                    + "(\""
+                    + PRIMARY_KEY
+                    + "\""
+                    + " UUID"
+                    + ")";
+            dbStatement.execute(createTraceBaseEdge);
 
             if(buildSecondaryIndexes)
             {
@@ -491,6 +512,7 @@ public class PostgreSQL extends SQL
     {
         if(( (edgeCount > 0) && (edgeCount % GLOBAL_TX_SIZE == 0) ) || forcedFlush)
         {
+            StringBuilder edgeHashes = new StringBuilder((int) (edgeCount * 32));
             String edgeFileName = "/tmp/bulk_edges.csv";
             try
             {
@@ -511,7 +533,15 @@ public class PostgreSQL extends SQL
                     ArrayList<String> annotationValues = new ArrayList<>();
                     for(String edgeColumnName : edgeColumnNames)
                     {
-                        annotationValues.add(edge.get(edgeColumnName));
+                        String annotationValue = edge.get(edgeColumnName);
+                        annotationValues.add(annotationValue);
+                        if(edgeColumnName.equals(PRIMARY_KEY))
+                        {
+                            edgeHashes.append("(");
+                            edgeHashes.append("'");
+                            edgeHashes.append(annotationValue);
+                            edgeHashes.append("'), ");
+                        }
                     }
                     writer.writeNext(annotationValues.toArray(new String[annotationValues.size()]));
                 }
@@ -522,25 +552,35 @@ public class PostgreSQL extends SQL
                 logger.log(Level.SEVERE, "Error writing edges to file", ex);
             }
 
-            String copyTableString = "COPY "
-                    + EDGE_TABLE
-                    + " FROM '"
-                    + edgeFileName
-                    + "' CSV HEADER";
             try
             {
+                String copyTableString = "COPY "
+                        + EDGE_TABLE
+                        + " FROM '"
+                        + edgeFileName
+                        + "' CSV HEADER";
                 Statement s = dbConnection.createStatement();
                 s.execute(copyTableString);
+                if(edgeHashes.length() > 0)
+                {
+                    String traceBaseEdgeInsert = "INSERT INTO "
+                            + TRACE_BASE_EDGE
+                            + "(\""
+                            + PRIMARY_KEY
+                            + "\") VALUES "
+                            + edgeHashes.substring(0, edgeHashes.length() - 2);
+                    s.execute(traceBaseEdgeInsert);
+                }
                 s.close();
                 globalTxCheckin(true);
                 edgeList.clear();
-                logger.log(Level.INFO, "Bulk uploaded " + GLOBAL_TX_SIZE + " edges to databases. Total edges: " + edgeCount);
+                logger.log(Level.INFO, "Bulk uploaded at max " + GLOBAL_TX_SIZE + " edges to databases. Total edges: " + edgeCount);
                 edgeBatches++;
                 long currentTime = System.currentTimeMillis();
                 if((currentTime - lastReportedTime) >= reportEveryMs)
                 {
                     lastReportedTime = currentTime;
-                    logger.log(Level.INFO, "edge batches flushed per " + reportingInterval + "sec: " + edgeBatches);
+                    logger.log(Level.INFO, "edge batches flushed per " + reportingInterval + " sec: " + edgeBatches);
                     edgeBatches = 0;
                 }
             }
@@ -571,6 +611,7 @@ public class PostgreSQL extends SQL
     {
         if(( (vertexCount > 0) && (vertexCount % GLOBAL_TX_SIZE == 0) ) || forcedFlush)
         {
+            StringBuilder vertexHashes = new StringBuilder((int) (vertexCount * 32));
             String vertexFileName = "/tmp/bulk_vertices.csv";
             try
             {
@@ -590,7 +631,15 @@ public class PostgreSQL extends SQL
                     ArrayList<String> annotationValues = new ArrayList<>();
                     for(String vertexColumnName : vertexColumnNames)
                     {
-                        annotationValues.add(vertex.get(vertexColumnName));
+                        String annotationValue = vertex.get(vertexColumnName);
+                        annotationValues.add(annotationValue);
+                        if(vertexColumnName.equals(PRIMARY_KEY))
+                        {
+                            vertexHashes.append("(");
+                            vertexHashes.append("'");
+                            vertexHashes.append(annotationValue);
+                            vertexHashes.append("'), ");
+                        }
                     }
                     writer.writeNext(annotationValues.toArray(new String[annotationValues.size()]));
                 }
@@ -601,25 +650,35 @@ public class PostgreSQL extends SQL
                 logger.log(Level.SEVERE, "Error writing vertices to file", ex);
             }
 
-            String copyTableString = "COPY "
-                    + VERTEX_TABLE
-                    + " FROM '"
-                    + vertexFileName
-                    + "' CSV HEADER";
             try
             {
+                String copyTableString = "COPY "
+                        + VERTEX_TABLE
+                        + " FROM '"
+                        + vertexFileName
+                        + "' CSV HEADER";
                 Statement s = dbConnection.createStatement();
                 s.execute(copyTableString);
+                if(vertexHashes.length() > 0)
+                {
+                    String traceBaseVertexInsert = "INSERT INTO "
+                            + TRACE_BASE_VERTEX
+                            + "(\""
+                            + PRIMARY_KEY
+                            + "\") VALUES "
+                            + vertexHashes.substring(0, vertexHashes.length() - 2);
+                    s.execute(traceBaseVertexInsert);
+                }
                 s.close();
                 globalTxCheckin(true);
                 vertexList.clear();
-                logger.log(Level.INFO, "Bulk uploaded " + GLOBAL_TX_SIZE + " vertices to databases. Total vertices: " + vertexCount);
+                logger.log(Level.INFO, "Bulk uploaded at max " + GLOBAL_TX_SIZE + " vertices to databases. Total vertices: " + vertexCount);
                 vertexBatches++;
                 long currentTime = System.currentTimeMillis();
                 if((currentTime - lastReportedTime) >= reportEveryMs)
                 {
                     lastReportedTime = currentTime;
-                    logger.log(Level.INFO, "vertex batches flushed per " + reportingInterval + "sec: " + vertexBatches);
+                    logger.log(Level.INFO, "vertex batches flushed per " + reportingInterval + " sec: " + vertexBatches);
                     vertexBatches = 0;
                 }
             }
@@ -702,10 +761,19 @@ public class PostgreSQL extends SQL
         }
         insertString = insertStringBuilder.substring(0, insertStringBuilder.length() - 2) + ")";
 
+        String traceBaseVertexInsert = "INSERT INTO "
+                + TRACE_BASE_VERTEX
+                + "(\""
+                + PRIMARY_KEY
+                + "\") VALUES ('"
+                + incomingVertex.bigHashCode()
+                + "')";
+
         try
         {
             Statement s = dbConnection.createStatement();
             s.execute(insertString);
+            s.execute(traceBaseVertexInsert);
             s.close();
             globalTxCheckin(false);
         }
@@ -745,5 +813,21 @@ public class PostgreSQL extends SQL
         }
 
         return result;
+    }
+
+    public void executeUpdate(String query)
+    {
+        try
+        {
+            globalTxCheckin(true);
+            Statement queryStatement = dbConnection.createStatement();
+            if(CURSOR_FETCH_SIZE > 0)
+                queryStatement.setFetchSize(CURSOR_FETCH_SIZE);
+            queryStatement.executeUpdate(query);
+        }
+        catch(SQLException ex)
+        {
+            logger.log(Level.SEVERE, "PostgreSQL query execution not successful!", ex);
+        }
     }
 }

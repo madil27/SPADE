@@ -107,7 +107,7 @@ public class QuickstepUtil {
 
   public static String[] GetTimestampRangeString(QuickstepExecutor qs, Graph graph) {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("E, dd MMM yyyy HH:mm:ss z");
-    Long[] span = QuickstepUtil.GetTimestampRange(qs, graph);
+      Long[] span = spade.query.quickgrail.utility.QuickstepUtil.GetTimestampRange(qs, graph);
     String startDateStr = "";
     String endDateStr = "";
     if (span[0] != 0) {

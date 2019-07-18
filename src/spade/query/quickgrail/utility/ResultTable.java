@@ -19,6 +19,8 @@
  */
 package spade.query.quickgrail.utility;
 
+import spade.query.quickgrail.utility.Schema;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -57,10 +59,11 @@ public class ResultTable {
   }
 
   private ArrayList<Row> rows = new ArrayList<Row>();
-  private Schema schema = null;
+    private spade.query.quickgrail.utility.Schema schema = null;
 
-  public static ResultTable FromText(String text, char column_delimiter) {
-    ResultTable table = new ResultTable();
+    public static spade.query.quickgrail.utility.ResultTable FromText(String text, char column_delimiter)
+    {
+        spade.query.quickgrail.utility.ResultTable table = new spade.query.quickgrail.utility.ResultTable();
     Scanner scanner = new Scanner(text);
     while (scanner.hasNextLine()) {
       String line = scanner.nextLine();

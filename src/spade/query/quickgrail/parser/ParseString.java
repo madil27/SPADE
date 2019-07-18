@@ -21,9 +21,11 @@ package spade.query.quickgrail.parser;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.parser.ParseTreeNode;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
-public class ParseString extends ParseTreeNode {
+public class ParseString extends ParseTreeNode
+{
   private String value;
 
   public ParseString(int lineNumber, int columnNumber, String value) {

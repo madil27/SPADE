@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Get the lineage of a set of vertices in a graph.
  */
-public class GetLineage extends Instruction {
+public class GetLineage extends Instruction
+{
   public enum Direction {
     kAncestor,
     kDescendant,

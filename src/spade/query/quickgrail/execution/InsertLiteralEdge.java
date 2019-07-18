@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Insert a list of edges into a graph by ID.
  */
-public class InsertLiteralEdge extends Instruction {
+public class InsertLiteralEdge extends Instruction
+{
   // The target graph to insert the edges.
   private Graph targetGraph;
   // Edge IDs to be inserted.

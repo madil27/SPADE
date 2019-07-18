@@ -2,15 +2,23 @@
 
 package spade.query.quickgrail.parser;
 
-import spade.query.quickgrail.types.*;
+import spade.query.quickgrail.parser.ParseAssignment;
+import spade.query.quickgrail.parser.ParseCommand;
+import spade.query.quickgrail.parser.ParseExpression;
+import spade.query.quickgrail.parser.ParseLiteral;
+import spade.query.quickgrail.parser.ParseName;
+import spade.query.quickgrail.parser.ParseOperation;
+import spade.query.quickgrail.parser.ParseProgram;
+import spade.query.quickgrail.parser.ParseStatement;
+import spade.query.quickgrail.parser.ParseString;
+import spade.query.quickgrail.parser.ParseVariable;
+import spade.query.quickgrail.types.StringType;
 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
 import java.util.List;
-import java.util.Iterator;
 import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
@@ -141,19 +149,27 @@ public class DSLParser extends Parser {
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
 	public static class ProgramContext extends ParserRuleContext {
-		public ParseProgram r;
+        public spade.query.quickgrail.parser.ParseProgram r;
 		public StatementContext h;
 		public StatementContext t;
-		public TerminalNode EOF() { return getToken(DSLParser.EOF, 0); }
+
+        public TerminalNode EOF()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.EOF, 0);
+        }
 		public List<StatementContext> statement() {
 			return getRuleContexts(StatementContext.class);
 		}
 		public StatementContext statement(int i) {
 			return getRuleContext(StatementContext.class,i);
 		}
-		public List<TerminalNode> TOKEN_SEMICOLON() { return getTokens(DSLParser.TOKEN_SEMICOLON); }
+
+        public List<TerminalNode> TOKEN_SEMICOLON()
+        {
+            return getTokens(spade.query.quickgrail.parser.DSLParser.TOKEN_SEMICOLON);
+        }
 		public TerminalNode TOKEN_SEMICOLON(int i) {
-			return getToken(DSLParser.TOKEN_SEMICOLON, i);
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_SEMICOLON, i);
 		}
 		public ProgramContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -246,10 +262,26 @@ public class DSLParser extends Parser {
 		public ExpressionContext expression(int i) {
 			return getRuleContext(ExpressionContext.class,i);
 		}
-		public TerminalNode TOKEN_ASSIGN() { return getToken(DSLParser.TOKEN_ASSIGN, 0); }
-		public TerminalNode TOKEN_PLUS_ASSIGN() { return getToken(DSLParser.TOKEN_PLUS_ASSIGN, 0); }
-		public TerminalNode TOKEN_MINUS_ASSIGN() { return getToken(DSLParser.TOKEN_MINUS_ASSIGN, 0); }
-		public TerminalNode TOKEN_INTERSECT_ASSIGN() { return getToken(DSLParser.TOKEN_INTERSECT_ASSIGN, 0); }
+
+        public TerminalNode TOKEN_ASSIGN()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_ASSIGN, 0);
+        }
+
+        public TerminalNode TOKEN_PLUS_ASSIGN()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_PLUS_ASSIGN, 0);
+        }
+
+        public TerminalNode TOKEN_MINUS_ASSIGN()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_MINUS_ASSIGN, 0);
+        }
+
+        public TerminalNode TOKEN_INTERSECT_ASSIGN()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_INTERSECT_ASSIGN, 0);
+        }
 		public NameContext name() {
 			return getRuleContext(NameContext.class,0);
 		}
@@ -287,7 +319,7 @@ public class DSLParser extends Parser {
 				setState(51);
 				((StatementContext)_localctx).e = expression();
 
-				  ((StatementContext)_localctx).r =  new ParseAssignment(((StatementContext)_localctx).v.r.getLineNumber(), ((StatementContext)_localctx).v.r.getColumnNumber(),
+                    ((StatementContext) _localctx).r = new spade.query.quickgrail.parser.ParseAssignment(((StatementContext) _localctx).v.r.getLineNumber(), ((StatementContext) _localctx).v.r.getColumnNumber(),
 				                           ParseAssignment.ResolveAssignmentType((((StatementContext)_localctx).t!=null?((StatementContext)_localctx).t.getText():null)),
 				                           ((StatementContext)_localctx).v.r, ((StatementContext)_localctx).e.r);
 
@@ -300,7 +332,7 @@ public class DSLParser extends Parser {
 				setState(54);
 				((StatementContext)_localctx).n = name();
 
-				  ParseCommand command =
+                    spade.query.quickgrail.parser.ParseCommand command =
 				      new ParseCommand(((StatementContext)_localctx).n.r.getLineNumber(), ((StatementContext)_localctx).n.r.getColumnNumber(), ((StatementContext)_localctx).n.r.getName());
 
 				setState(61);
@@ -341,7 +373,7 @@ public class DSLParser extends Parser {
 	}
 
 	public static class ExpressionContext extends ParserRuleContext {
-		public ParseExpression r;
+        public spade.query.quickgrail.parser.ParseExpression r;
 		public Add_expressionContext add_expression;
 		public Or_expressionContext or_expression;
 		public Add_expressionContext add_expression() {
@@ -397,7 +429,7 @@ public class DSLParser extends Parser {
 	}
 
 	public static class Or_expressionContext extends ParserRuleContext {
-		public ParseExpression r;
+        public spade.query.quickgrail.parser.ParseExpression r;
 		public And_expressionContext lhs;
 		public Token t;
 		public And_expressionContext rhs;
@@ -407,9 +439,13 @@ public class DSLParser extends Parser {
 		public And_expressionContext and_expression(int i) {
 			return getRuleContext(And_expressionContext.class,i);
 		}
-		public List<TerminalNode> TOKEN_OR() { return getTokens(DSLParser.TOKEN_OR); }
+
+        public List<TerminalNode> TOKEN_OR()
+        {
+            return getTokens(spade.query.quickgrail.parser.DSLParser.TOKEN_OR);
+        }
 		public TerminalNode TOKEN_OR(int i) {
-			return getToken(DSLParser.TOKEN_OR, i);
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_OR, i);
 		}
 		public Or_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -440,10 +476,10 @@ public class DSLParser extends Parser {
 				setState(79);
 				((Or_expressionContext)_localctx).rhs = and_expression();
 
-				    ParseString operator =
-				        new ParseString(((Or_expressionContext)_localctx).t.getLine(), ((Or_expressionContext)_localctx).t.getCharPositionInLine(), (((Or_expressionContext)_localctx).t!=null?((Or_expressionContext)_localctx).t.getText():null));
-				    ParseOperation operation =
-				        new ParseOperation(((Or_expressionContext)_localctx).t.getLine(), ((Or_expressionContext)_localctx).t.getCharPositionInLine(), null, operator);
+                    spade.query.quickgrail.parser.ParseString operator =
+                            new spade.query.quickgrail.parser.ParseString(((Or_expressionContext) _localctx).t.getLine(), ((Or_expressionContext) _localctx).t.getCharPositionInLine(), (((Or_expressionContext) _localctx).t != null ? ((Or_expressionContext) _localctx).t.getText() : null));
+                    spade.query.quickgrail.parser.ParseOperation operation =
+                            new spade.query.quickgrail.parser.ParseOperation(((Or_expressionContext) _localctx).t.getLine(), ((Or_expressionContext) _localctx).t.getCharPositionInLine(), null, operator);
 				    operation.addOperand(_localctx.r);
 				    operation.addOperand(((Or_expressionContext)_localctx).rhs.r);
 				    ((Or_expressionContext)_localctx).r =  operation;
@@ -468,7 +504,7 @@ public class DSLParser extends Parser {
 	}
 
 	public static class And_expressionContext extends ParserRuleContext {
-		public ParseExpression r;
+        public spade.query.quickgrail.parser.ParseExpression r;
 		public Not_expressionContext lhs;
 		public Token t;
 		public Not_expressionContext rhs;
@@ -478,9 +514,13 @@ public class DSLParser extends Parser {
 		public Not_expressionContext not_expression(int i) {
 			return getRuleContext(Not_expressionContext.class,i);
 		}
-		public List<TerminalNode> TOKEN_AND() { return getTokens(DSLParser.TOKEN_AND); }
+
+        public List<TerminalNode> TOKEN_AND()
+        {
+            return getTokens(spade.query.quickgrail.parser.DSLParser.TOKEN_AND);
+        }
 		public TerminalNode TOKEN_AND(int i) {
-			return getToken(DSLParser.TOKEN_AND, i);
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_AND, i);
 		}
 		public And_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -511,10 +551,10 @@ public class DSLParser extends Parser {
 				setState(90);
 				((And_expressionContext)_localctx).rhs = not_expression();
 
-				    ParseString operator =
-				        new ParseString(((And_expressionContext)_localctx).t.getLine(), ((And_expressionContext)_localctx).t.getCharPositionInLine(), (((And_expressionContext)_localctx).t!=null?((And_expressionContext)_localctx).t.getText():null));
-				    ParseOperation operation =
-				        new ParseOperation(((And_expressionContext)_localctx).t.getLine(), ((And_expressionContext)_localctx).t.getCharPositionInLine(), null, operator);
+                    spade.query.quickgrail.parser.ParseString operator =
+                            new spade.query.quickgrail.parser.ParseString(((And_expressionContext) _localctx).t.getLine(), ((And_expressionContext) _localctx).t.getCharPositionInLine(), (((And_expressionContext) _localctx).t != null ? ((And_expressionContext) _localctx).t.getText() : null));
+                    spade.query.quickgrail.parser.ParseOperation operation =
+                            new spade.query.quickgrail.parser.ParseOperation(((And_expressionContext) _localctx).t.getLine(), ((And_expressionContext) _localctx).t.getCharPositionInLine(), null, operator);
 				    operation.addOperand(_localctx.r);
 				    operation.addOperand(((And_expressionContext)_localctx).rhs.r);
 				    ((And_expressionContext)_localctx).r =  operation;
@@ -539,7 +579,7 @@ public class DSLParser extends Parser {
 	}
 
 	public static class Not_expressionContext extends ParserRuleContext {
-		public ParseExpression r;
+        public spade.query.quickgrail.parser.ParseExpression r;
 		public Token t;
 		public Comparison_expressionContext c;
 		public Function_callContext f;
@@ -549,7 +589,11 @@ public class DSLParser extends Parser {
 		public Function_callContext function_call() {
 			return getRuleContext(Function_callContext.class,0);
 		}
-		public TerminalNode TOKEN_NOT() { return getToken(DSLParser.TOKEN_NOT, 0); }
+
+        public TerminalNode TOKEN_NOT()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_NOT, 0);
+        }
 		public Not_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -564,8 +608,8 @@ public class DSLParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 
-			  ParseString operator = null;
-			  ParseExpression operand = null;
+                spade.query.quickgrail.parser.ParseString operator = null;
+                spade.query.quickgrail.parser.ParseExpression operand = null;
 
 			setState(101);
 			_errHandler.sync(this);
@@ -575,7 +619,7 @@ public class DSLParser extends Parser {
 				setState(99);
 				((Not_expressionContext)_localctx).t = match(TOKEN_NOT);
 
-				    operator = new ParseString(((Not_expressionContext)_localctx).t.getLine(), ((Not_expressionContext)_localctx).t.getCharPositionInLine(), (((Not_expressionContext)_localctx).t!=null?((Not_expressionContext)_localctx).t.getText():null));
+                    operator = new spade.query.quickgrail.parser.ParseString(((Not_expressionContext) _localctx).t.getLine(), ((Not_expressionContext) _localctx).t.getCharPositionInLine(), (((Not_expressionContext) _localctx).t != null ? ((Not_expressionContext) _localctx).t.getText() : null));
 				  
 				}
 			}
@@ -606,8 +650,8 @@ public class DSLParser extends Parser {
 			  if (operator == null) {
 			    ((Not_expressionContext)_localctx).r =  operand;
 			  } else {
-			    ParseOperation operation =
-			        new ParseOperation(((Not_expressionContext)_localctx).t.getLine(), ((Not_expressionContext)_localctx).t.getCharPositionInLine(), null, operator);
+                  spade.query.quickgrail.parser.ParseOperation operation =
+                          new spade.query.quickgrail.parser.ParseOperation(((Not_expressionContext) _localctx).t.getLine(), ((Not_expressionContext) _localctx).t.getCharPositionInLine(), null, operator);
 			    operation.addOperand(operand);
 			    ((Not_expressionContext)_localctx).r =  operation;
 			  }
@@ -626,7 +670,7 @@ public class DSLParser extends Parser {
 	}
 
 	public static class Comparison_expressionContext extends ParserRuleContext {
-		public ParseExpression r;
+        public spade.query.quickgrail.parser.ParseExpression r;
 		public Add_expressionContext lhs;
 		public Token n;
 		public Token t;
@@ -637,16 +681,56 @@ public class DSLParser extends Parser {
 		public Add_expressionContext add_expression(int i) {
 			return getRuleContext(Add_expressionContext.class,i);
 		}
-		public TerminalNode TOKEN_LIKE() { return getToken(DSLParser.TOKEN_LIKE, 0); }
-		public TerminalNode TOKEN_EQUAL() { return getToken(DSLParser.TOKEN_EQUAL, 0); }
-		public TerminalNode TOKEN_ASSIGN() { return getToken(DSLParser.TOKEN_ASSIGN, 0); }
-		public TerminalNode TOKEN_NOT_EQUAL() { return getToken(DSLParser.TOKEN_NOT_EQUAL, 0); }
-		public TerminalNode TOKEN_REGEX() { return getToken(DSLParser.TOKEN_REGEX, 0); }
-		public TerminalNode TOKEN_LESS() { return getToken(DSLParser.TOKEN_LESS, 0); }
-		public TerminalNode TOKEN_GREATER() { return getToken(DSLParser.TOKEN_GREATER, 0); }
-		public TerminalNode TOKEN_LESS_EQUAL() { return getToken(DSLParser.TOKEN_LESS_EQUAL, 0); }
-		public TerminalNode TOKEN_GREATER_EQUAL() { return getToken(DSLParser.TOKEN_GREATER_EQUAL, 0); }
-		public TerminalNode TOKEN_NOT() { return getToken(DSLParser.TOKEN_NOT, 0); }
+
+        public TerminalNode TOKEN_LIKE()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_LIKE, 0);
+        }
+
+        public TerminalNode TOKEN_EQUAL()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_EQUAL, 0);
+        }
+
+        public TerminalNode TOKEN_ASSIGN()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_ASSIGN, 0);
+        }
+
+        public TerminalNode TOKEN_NOT_EQUAL()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_NOT_EQUAL, 0);
+        }
+
+        public TerminalNode TOKEN_REGEX()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_REGEX, 0);
+        }
+
+        public TerminalNode TOKEN_LESS()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_LESS, 0);
+        }
+
+        public TerminalNode TOKEN_GREATER()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_GREATER, 0);
+        }
+
+        public TerminalNode TOKEN_LESS_EQUAL()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_LESS_EQUAL, 0);
+        }
+
+        public TerminalNode TOKEN_GREATER_EQUAL()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_GREATER_EQUAL, 0);
+        }
+
+        public TerminalNode TOKEN_NOT()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_NOT, 0);
+        }
 		public Comparison_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -661,7 +745,7 @@ public class DSLParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 
-			  ParseString negateOp = null;
+                spade.query.quickgrail.parser.ParseString negateOp = null;
 
 			setState(114);
 			((Comparison_expressionContext)_localctx).lhs = add_expression();
@@ -673,7 +757,7 @@ public class DSLParser extends Parser {
 				setState(115);
 				((Comparison_expressionContext)_localctx).n = match(TOKEN_NOT);
 
-				    negateOp = new ParseString(((Comparison_expressionContext)_localctx).n.getLine(), ((Comparison_expressionContext)_localctx).n.getCharPositionInLine(), (((Comparison_expressionContext)_localctx).n!=null?((Comparison_expressionContext)_localctx).n.getText():null));
+                    negateOp = new spade.query.quickgrail.parser.ParseString(((Comparison_expressionContext) _localctx).n.getLine(), ((Comparison_expressionContext) _localctx).n.getCharPositionInLine(), (((Comparison_expressionContext) _localctx).n != null ? ((Comparison_expressionContext) _localctx).n.getText() : null));
 				  
 				}
 			}
@@ -692,17 +776,17 @@ public class DSLParser extends Parser {
 			setState(120);
 			((Comparison_expressionContext)_localctx).rhs = add_expression();
 
-			  ParseString comparator =
-			      new ParseString(((Comparison_expressionContext)_localctx).t.getLine(), ((Comparison_expressionContext)_localctx).t.getCharPositionInLine(), (((Comparison_expressionContext)_localctx).t!=null?((Comparison_expressionContext)_localctx).t.getText():null));
-			  ParseOperation comparison =
-			      new ParseOperation(((Comparison_expressionContext)_localctx).t.getLine(), ((Comparison_expressionContext)_localctx).t.getCharPositionInLine(), null, comparator);
+                spade.query.quickgrail.parser.ParseString comparator =
+                        new spade.query.quickgrail.parser.ParseString(((Comparison_expressionContext) _localctx).t.getLine(), ((Comparison_expressionContext) _localctx).t.getCharPositionInLine(), (((Comparison_expressionContext) _localctx).t != null ? ((Comparison_expressionContext) _localctx).t.getText() : null));
+                spade.query.quickgrail.parser.ParseOperation comparison =
+                        new spade.query.quickgrail.parser.ParseOperation(((Comparison_expressionContext) _localctx).t.getLine(), ((Comparison_expressionContext) _localctx).t.getCharPositionInLine(), null, comparator);
 			  comparison.addOperand(((Comparison_expressionContext)_localctx).lhs.r);
 			  comparison.addOperand(((Comparison_expressionContext)_localctx).rhs.r);
 			  ((Comparison_expressionContext)_localctx).r =  comparison;
 
 			  if (negateOp != null) {
-			  ParseOperation operation =
-			        new ParseOperation(negateOp.getLineNumber(), negateOp.getColumnNumber(),
+                  spade.query.quickgrail.parser.ParseOperation operation =
+                          new spade.query.quickgrail.parser.ParseOperation(negateOp.getLineNumber(), negateOp.getColumnNumber(),
 			                           null, negateOp);
 			    operation.addOperand(_localctx.r);
 			    ((Comparison_expressionContext)_localctx).r =  operation;
@@ -722,7 +806,7 @@ public class DSLParser extends Parser {
 	}
 
 	public static class Add_expressionContext extends ParserRuleContext {
-		public ParseExpression r;
+        public spade.query.quickgrail.parser.ParseExpression r;
 		public Intersect_expressionContext lhs;
 		public Token t;
 		public Intersect_expressionContext rhs;
@@ -732,13 +816,21 @@ public class DSLParser extends Parser {
 		public Intersect_expressionContext intersect_expression(int i) {
 			return getRuleContext(Intersect_expressionContext.class,i);
 		}
-		public List<TerminalNode> TOKEN_PLUS() { return getTokens(DSLParser.TOKEN_PLUS); }
+
+        public List<TerminalNode> TOKEN_PLUS()
+        {
+            return getTokens(spade.query.quickgrail.parser.DSLParser.TOKEN_PLUS);
+        }
 		public TerminalNode TOKEN_PLUS(int i) {
-			return getToken(DSLParser.TOKEN_PLUS, i);
-		}
-		public List<TerminalNode> TOKEN_MINUS() { return getTokens(DSLParser.TOKEN_MINUS); }
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_PLUS, i);
+        }
+
+        public List<TerminalNode> TOKEN_MINUS()
+        {
+            return getTokens(spade.query.quickgrail.parser.DSLParser.TOKEN_MINUS);
+        }
 		public TerminalNode TOKEN_MINUS(int i) {
-			return getToken(DSLParser.TOKEN_MINUS, i);
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_MINUS, i);
 		}
 		public Add_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -778,10 +870,10 @@ public class DSLParser extends Parser {
 				setState(126);
 				((Add_expressionContext)_localctx).rhs = intersect_expression();
 
-				    ParseString operator =
-				        new ParseString(((Add_expressionContext)_localctx).t.getLine(), ((Add_expressionContext)_localctx).t.getCharPositionInLine(), (((Add_expressionContext)_localctx).t!=null?((Add_expressionContext)_localctx).t.getText():null));
-				    ParseOperation operation =
-				        new ParseOperation(((Add_expressionContext)_localctx).t.getLine(), ((Add_expressionContext)_localctx).t.getCharPositionInLine(), null, operator);
+                    spade.query.quickgrail.parser.ParseString operator =
+                            new spade.query.quickgrail.parser.ParseString(((Add_expressionContext) _localctx).t.getLine(), ((Add_expressionContext) _localctx).t.getCharPositionInLine(), (((Add_expressionContext) _localctx).t != null ? ((Add_expressionContext) _localctx).t.getText() : null));
+                    spade.query.quickgrail.parser.ParseOperation operation =
+                            new spade.query.quickgrail.parser.ParseOperation(((Add_expressionContext) _localctx).t.getLine(), ((Add_expressionContext) _localctx).t.getCharPositionInLine(), null, operator);
 				    operation.addOperand(_localctx.r);
 				    operation.addOperand(((Add_expressionContext)_localctx).rhs.r);
 				    ((Add_expressionContext)_localctx).r =  operation;
@@ -806,7 +898,7 @@ public class DSLParser extends Parser {
 	}
 
 	public static class Intersect_expressionContext extends ParserRuleContext {
-		public ParseExpression r;
+        public spade.query.quickgrail.parser.ParseExpression r;
 		public Function_callContext lhs;
 		public Token t;
 		public Function_callContext rhs;
@@ -816,9 +908,13 @@ public class DSLParser extends Parser {
 		public Function_callContext function_call(int i) {
 			return getRuleContext(Function_callContext.class,i);
 		}
-		public List<TerminalNode> TOKEN_INTERSECT() { return getTokens(DSLParser.TOKEN_INTERSECT); }
+
+        public List<TerminalNode> TOKEN_INTERSECT()
+        {
+            return getTokens(spade.query.quickgrail.parser.DSLParser.TOKEN_INTERSECT);
+        }
 		public TerminalNode TOKEN_INTERSECT(int i) {
-			return getToken(DSLParser.TOKEN_INTERSECT, i);
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_INTERSECT, i);
 		}
 		public Intersect_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -849,10 +945,10 @@ public class DSLParser extends Parser {
 				setState(137);
 				((Intersect_expressionContext)_localctx).rhs = function_call();
 
-				    ParseString operator =
-				        new ParseString(((Intersect_expressionContext)_localctx).t.getLine(), ((Intersect_expressionContext)_localctx).t.getCharPositionInLine(), (((Intersect_expressionContext)_localctx).t!=null?((Intersect_expressionContext)_localctx).t.getText():null));
-				    ParseOperation operation =
-				        new ParseOperation(((Intersect_expressionContext)_localctx).t.getLine(), ((Intersect_expressionContext)_localctx).t.getCharPositionInLine(), null, operator);
+                    spade.query.quickgrail.parser.ParseString operator =
+                            new spade.query.quickgrail.parser.ParseString(((Intersect_expressionContext) _localctx).t.getLine(), ((Intersect_expressionContext) _localctx).t.getCharPositionInLine(), (((Intersect_expressionContext) _localctx).t != null ? ((Intersect_expressionContext) _localctx).t.getText() : null));
+                    spade.query.quickgrail.parser.ParseOperation operation =
+                            new spade.query.quickgrail.parser.ParseOperation(((Intersect_expressionContext) _localctx).t.getLine(), ((Intersect_expressionContext) _localctx).t.getCharPositionInLine(), null, operator);
 				    operation.addOperand(_localctx.r);
 				    operation.addOperand(((Intersect_expressionContext)_localctx).rhs.r);
 				    ((Intersect_expressionContext)_localctx).r =  operation;
@@ -877,7 +973,7 @@ public class DSLParser extends Parser {
 	}
 
 	public static class Function_callContext extends ParserRuleContext {
-		public ParseExpression r;
+        public spade.query.quickgrail.parser.ParseExpression r;
 		public FactorContext factor;
 		public FactorContext s;
 		public NameContext f;
@@ -885,13 +981,21 @@ public class DSLParser extends Parser {
 		public FactorContext factor() {
 			return getRuleContext(FactorContext.class,0);
 		}
-		public List<TerminalNode> TOKEN_LPAREN() { return getTokens(DSLParser.TOKEN_LPAREN); }
+
+        public List<TerminalNode> TOKEN_LPAREN()
+        {
+            return getTokens(spade.query.quickgrail.parser.DSLParser.TOKEN_LPAREN);
+        }
 		public TerminalNode TOKEN_LPAREN(int i) {
-			return getToken(DSLParser.TOKEN_LPAREN, i);
-		}
-		public List<TerminalNode> TOKEN_RPAREN() { return getTokens(DSLParser.TOKEN_RPAREN); }
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_LPAREN, i);
+        }
+
+        public List<TerminalNode> TOKEN_RPAREN()
+        {
+            return getTokens(spade.query.quickgrail.parser.DSLParser.TOKEN_RPAREN);
+        }
 		public TerminalNode TOKEN_RPAREN(int i) {
-			return getToken(DSLParser.TOKEN_RPAREN, i);
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_RPAREN, i);
 		}
 		public List<NameContext> name() {
 			return getRuleContexts(NameContext.class);
@@ -899,9 +1003,13 @@ public class DSLParser extends Parser {
 		public NameContext name(int i) {
 			return getRuleContext(NameContext.class,i);
 		}
-		public List<TerminalNode> TOKEN_DOT() { return getTokens(DSLParser.TOKEN_DOT); }
+
+        public List<TerminalNode> TOKEN_DOT()
+        {
+            return getTokens(spade.query.quickgrail.parser.DSLParser.TOKEN_DOT);
+        }
 		public TerminalNode TOKEN_DOT(int i) {
-			return getToken(DSLParser.TOKEN_DOT, i);
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_DOT, i);
 		}
 		public List<Argument_listContext> argument_list() {
 			return getRuleContexts(Argument_listContext.class);
@@ -937,8 +1045,8 @@ public class DSLParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 
-				  ParseExpression subject = null;
-				  ArrayList<ParseExpression> arguments = null;
+                    spade.query.quickgrail.parser.ParseExpression subject = null;
+                    ArrayList<spade.query.quickgrail.parser.ParseExpression> arguments = null;
 
 				setState(153);
 				_errHandler.sync(this);
@@ -975,10 +1083,11 @@ public class DSLParser extends Parser {
 				setState(162);
 				match(TOKEN_RPAREN);
 
-				  ParseOperation operation =
-				      new ParseOperation(((Function_callContext)_localctx).f.r.getLineNumber(), ((Function_callContext)_localctx).f.r.getColumnNumber(), subject, ((Function_callContext)_localctx).f.r.getName());
+                    spade.query.quickgrail.parser.ParseOperation operation =
+                            new spade.query.quickgrail.parser.ParseOperation(((Function_callContext) _localctx).f.r.getLineNumber(), ((Function_callContext) _localctx).f.r.getColumnNumber(), subject, ((Function_callContext) _localctx).f.r.getName());
 				  if (arguments != null) {
-				    for (ParseExpression e : arguments) {
+                      for(spade.query.quickgrail.parser.ParseExpression e : arguments)
+                      {
 				      operation.addOperand(e);
 				    }
 				  }
@@ -1015,10 +1124,11 @@ public class DSLParser extends Parser {
 					setState(173);
 					match(TOKEN_RPAREN);
 
-					    ParseOperation ro =
+                        spade.query.quickgrail.parser.ParseOperation ro =
 					        new ParseOperation(((Function_callContext)_localctx).f.r.getLineNumber(), ((Function_callContext)_localctx).f.r.getColumnNumber(), _localctx.r, ((Function_callContext)_localctx).f.r.getName());
 					    if (arguments != null) {
-					      for (ParseExpression e : arguments) {
+                            for(spade.query.quickgrail.parser.ParseExpression e : arguments)
+                            {
 					        ro.addOperand(e);
 					      }
 					    }
@@ -1046,7 +1156,7 @@ public class DSLParser extends Parser {
 	}
 
 	public static class FactorContext extends ParserRuleContext {
-		public ParseExpression r;
+        public spade.query.quickgrail.parser.ParseExpression r;
 		public LiteralContext literal;
 		public VariableContext variable;
 		public NameContext name;
@@ -1060,11 +1170,19 @@ public class DSLParser extends Parser {
 		public NameContext name() {
 			return getRuleContext(NameContext.class,0);
 		}
-		public TerminalNode TOKEN_LPAREN() { return getToken(DSLParser.TOKEN_LPAREN, 0); }
+
+        public TerminalNode TOKEN_LPAREN()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_LPAREN, 0);
+        }
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
-		public TerminalNode TOKEN_RPAREN() { return getToken(DSLParser.TOKEN_RPAREN, 0); }
+
+        public TerminalNode TOKEN_RPAREN()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_RPAREN, 0);
+        }
 		public FactorContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1141,7 +1259,7 @@ public class DSLParser extends Parser {
 	}
 
 	public static class Argument_listContext extends ParserRuleContext {
-		public ArrayList<ParseExpression> r;
+        public ArrayList<spade.query.quickgrail.parser.ParseExpression> r;
 		public ExpressionContext e;
 		public ExpressionContext t;
 		public List<ExpressionContext> expression() {
@@ -1150,9 +1268,13 @@ public class DSLParser extends Parser {
 		public ExpressionContext expression(int i) {
 			return getRuleContext(ExpressionContext.class,i);
 		}
-		public List<TerminalNode> TOKEN_COMMA() { return getTokens(DSLParser.TOKEN_COMMA); }
+
+        public List<TerminalNode> TOKEN_COMMA()
+        {
+            return getTokens(spade.query.quickgrail.parser.DSLParser.TOKEN_COMMA);
+        }
 		public TerminalNode TOKEN_COMMA(int i) {
-			return getToken(DSLParser.TOKEN_COMMA, i);
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_COMMA, i);
 		}
 		public Argument_listContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1206,10 +1328,18 @@ public class DSLParser extends Parser {
 	}
 
 	public static class NameContext extends ParserRuleContext {
-		public ParseName r;
+        public spade.query.quickgrail.parser.ParseName r;
 		public Token n;
-		public TerminalNode TOKEN_NAME() { return getToken(DSLParser.TOKEN_NAME, 0); }
-		public TerminalNode TOKEN_DOUBLE_QUOTED_NAME() { return getToken(DSLParser.TOKEN_DOUBLE_QUOTED_NAME, 0); }
+
+        public TerminalNode TOKEN_NAME()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_NAME, 0);
+        }
+
+        public TerminalNode TOKEN_DOUBLE_QUOTED_NAME()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_DOUBLE_QUOTED_NAME, 0);
+        }
 		public NameContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1229,8 +1359,8 @@ public class DSLParser extends Parser {
 				setState(210);
 				((NameContext)_localctx).n = match(TOKEN_NAME);
 
-				  ParseString name = new ParseString(((NameContext)_localctx).n.getLine(), ((NameContext)_localctx).n.getCharPositionInLine(), (((NameContext)_localctx).n!=null?((NameContext)_localctx).n.getText():null));
-				  ((NameContext)_localctx).r =  new ParseName(((NameContext)_localctx).n.getLine(), ((NameContext)_localctx).n.getCharPositionInLine(), name);
+                    spade.query.quickgrail.parser.ParseString name = new spade.query.quickgrail.parser.ParseString(((NameContext) _localctx).n.getLine(), ((NameContext) _localctx).n.getCharPositionInLine(), (((NameContext) _localctx).n != null ? ((NameContext) _localctx).n.getText() : null));
+                    ((NameContext) _localctx).r = new spade.query.quickgrail.parser.ParseName(((NameContext) _localctx).n.getLine(), ((NameContext) _localctx).n.getCharPositionInLine(), name);
 
 				}
 				break;
@@ -1241,7 +1371,7 @@ public class DSLParser extends Parser {
 				((NameContext)_localctx).n = match(TOKEN_DOUBLE_QUOTED_NAME);
 
 				  String value = StripQuotedStringLiteral((((NameContext)_localctx).n!=null?((NameContext)_localctx).n.getText():null));
-				  ParseString name = new ParseString(((NameContext)_localctx).n.getLine(), ((NameContext)_localctx).n.getCharPositionInLine(), value);
+                    spade.query.quickgrail.parser.ParseString name = new spade.query.quickgrail.parser.ParseString(((NameContext) _localctx).n.getLine(), ((NameContext) _localctx).n.getCharPositionInLine(), value);
 				  ((NameContext)_localctx).r =  new ParseName(((NameContext)_localctx).n.getLine(), ((NameContext)_localctx).n.getCharPositionInLine(), name);
 
 				}
@@ -1262,10 +1392,18 @@ public class DSLParser extends Parser {
 	}
 
 	public static class VariableContext extends ParserRuleContext {
-		public ParseVariable r;
+        public spade.query.quickgrail.parser.ParseVariable r;
 		public Token v;
-		public TerminalNode TOKEN_GRAPH_VARIABLE() { return getToken(DSLParser.TOKEN_GRAPH_VARIABLE, 0); }
-		public TerminalNode TOKEN_GRAPH_METADATA_VARIABLE() { return getToken(DSLParser.TOKEN_GRAPH_METADATA_VARIABLE, 0); }
+
+        public TerminalNode TOKEN_GRAPH_VARIABLE()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_GRAPH_VARIABLE, 0);
+        }
+
+        public TerminalNode TOKEN_GRAPH_METADATA_VARIABLE()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_GRAPH_METADATA_VARIABLE, 0);
+        }
 		public VariableContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1285,9 +1423,9 @@ public class DSLParser extends Parser {
 				setState(216);
 				((VariableContext)_localctx).v = match(TOKEN_GRAPH_VARIABLE);
 
-				  ParseString name = new ParseString(((VariableContext)_localctx).v.getLine(), ((VariableContext)_localctx).v.getCharPositionInLine(), (((VariableContext)_localctx).v!=null?((VariableContext)_localctx).v.getText():null));
-				  ((VariableContext)_localctx).r =  new ParseVariable(((VariableContext)_localctx).v.getLine(), ((VariableContext)_localctx).v.getCharPositionInLine(),
-				                         name, GraphType.GetInstance());
+                    spade.query.quickgrail.parser.ParseString name = new spade.query.quickgrail.parser.ParseString(((VariableContext) _localctx).v.getLine(), ((VariableContext) _localctx).v.getCharPositionInLine(), (((VariableContext) _localctx).v != null ? ((VariableContext) _localctx).v.getText() : null));
+                    ((VariableContext) _localctx).r = new spade.query.quickgrail.parser.ParseVariable(((VariableContext) _localctx).v.getLine(), ((VariableContext) _localctx).v.getCharPositionInLine(),
+                            name, spade.query.quickgrail.types.GraphType.GetInstance());
 
 				}
 				break;
@@ -1297,9 +1435,9 @@ public class DSLParser extends Parser {
 				setState(218);
 				((VariableContext)_localctx).v = match(TOKEN_GRAPH_METADATA_VARIABLE);
 
-				  ParseString name = new ParseString(((VariableContext)_localctx).v.getLine(), ((VariableContext)_localctx).v.getCharPositionInLine(), (((VariableContext)_localctx).v!=null?((VariableContext)_localctx).v.getText():null));
+                    spade.query.quickgrail.parser.ParseString name = new ParseString(((VariableContext) _localctx).v.getLine(), ((VariableContext) _localctx).v.getCharPositionInLine(), (((VariableContext) _localctx).v != null ? ((VariableContext) _localctx).v.getText() : null));
 				  ((VariableContext)_localctx).r =  new ParseVariable(((VariableContext)_localctx).v.getLine(), ((VariableContext)_localctx).v.getCharPositionInLine(),
-				                         name, GraphMetadataType.GetInstance());
+                          name, spade.query.quickgrail.types.GraphMetadataType.GetInstance());
 
 				}
 				break;
@@ -1319,10 +1457,18 @@ public class DSLParser extends Parser {
 	}
 
 	public static class LiteralContext extends ParserRuleContext {
-		public ParseLiteral r;
+        public spade.query.quickgrail.parser.ParseLiteral r;
 		public Token t;
-		public TerminalNode TOKEN_NUMBER() { return getToken(DSLParser.TOKEN_NUMBER, 0); }
-		public TerminalNode TOKEN_SINGLE_QUOTED_STRING_LITERAL() { return getToken(DSLParser.TOKEN_SINGLE_QUOTED_STRING_LITERAL, 0); }
+
+        public TerminalNode TOKEN_NUMBER()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_NUMBER, 0);
+        }
+
+        public TerminalNode TOKEN_SINGLE_QUOTED_STRING_LITERAL()
+        {
+            return getToken(spade.query.quickgrail.parser.DSLParser.TOKEN_SINGLE_QUOTED_STRING_LITERAL, 0);
+        }
 		public LiteralContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1343,8 +1489,8 @@ public class DSLParser extends Parser {
 				((LiteralContext)_localctx).t = match(TOKEN_NUMBER);
 
 				  Integer value = Integer.parseInt((((LiteralContext)_localctx).t!=null?((LiteralContext)_localctx).t.getText():null));
-				  ((LiteralContext)_localctx).r =  new ParseLiteral(((LiteralContext)_localctx).t.getLine(), ((LiteralContext)_localctx).t.getCharPositionInLine(),
-				                        new TypedValue(IntegerType.GetInstance(), value));
+                    ((LiteralContext) _localctx).r = new spade.query.quickgrail.parser.ParseLiteral(((LiteralContext) _localctx).t.getLine(), ((LiteralContext) _localctx).t.getCharPositionInLine(),
+                            new spade.query.quickgrail.types.TypedValue(spade.query.quickgrail.types.IntegerType.GetInstance(), value));
 
 				}
 				break;
@@ -1356,7 +1502,7 @@ public class DSLParser extends Parser {
 
 				  String value = StripQuotedStringLiteral((((LiteralContext)_localctx).t!=null?((LiteralContext)_localctx).t.getText():null));
 				  ((LiteralContext)_localctx).r =  new ParseLiteral(((LiteralContext)_localctx).t.getLine(), ((LiteralContext)_localctx).t.getCharPositionInLine(),
-				                        new TypedValue(StringType.GetInstance(), value));
+                          new spade.query.quickgrail.types.TypedValue(StringType.GetInstance(), value));
 
 				}
 				break;

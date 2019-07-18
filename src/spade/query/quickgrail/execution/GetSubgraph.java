@@ -31,7 +31,8 @@ import spade.storage.quickstep.QuickstepExecutor;
  * The operation $S.getSubgraph($T) is to find all the vertices and edges that
  * are spanned by the skeleton graph.
  */
-public class GetSubgraph extends Instruction {
+public class GetSubgraph extends Instruction
+{
   private Graph targetGraph;
   private Graph subjectGraph;
   private Graph skeletonGraph;

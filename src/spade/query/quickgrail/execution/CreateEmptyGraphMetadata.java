@@ -21,7 +21,9 @@ package spade.query.quickgrail.execution;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.execution.ExecutionContext;
 import spade.query.quickgrail.entities.GraphMetadata;
+import spade.query.quickgrail.execution.Instruction;
 import spade.query.quickgrail.kernel.Environment;
 import spade.query.quickgrail.utility.QuickstepUtil;
 import spade.query.quickgrail.utility.TreeStringSerializable;
@@ -29,7 +31,8 @@ import spade.query.quickgrail.utility.TreeStringSerializable;
 /**
  * This class is not yet used in the SPADE integrated QuickGrail.
  */
-public class CreateEmptyGraphMetadata extends Instruction {
+public class CreateEmptyGraphMetadata extends Instruction
+{
   private GraphMetadata metadata;
 
   public CreateEmptyGraphMetadata(GraphMetadata metadata) {

@@ -29,7 +29,8 @@ import spade.query.quickgrail.kernel.Environment;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 import spade.storage.quickstep.QuickstepExecutor;
 
-public class IntersectGraph extends Instruction {
+public class IntersectGraph extends Instruction
+{
   // Output graph.
   private Graph outputGraph;
   // Input graphs.

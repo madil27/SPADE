@@ -22,13 +22,16 @@ package spade.query.quickgrail.execution;
 import java.util.ArrayList;
 import java.util.List;
 
+import spade.query.quickgrail.execution.ExecutionContext;
+import spade.query.quickgrail.execution.Instruction;
 import spade.query.quickgrail.kernel.Environment;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
 /**
  * Remove the specified graphs stored in QuickGrail.
  */
-public class EraseSymbols extends Instruction {
+public class EraseSymbols extends Instruction
+{
   // The graph variable names to be erased.
   private List<String> symbols;
 

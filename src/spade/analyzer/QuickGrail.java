@@ -41,7 +41,7 @@ import spade.storage.quickstep.QuickstepConfiguration;
 import spade.storage.quickstep.QuickstepExecutor;
 
 public class QuickGrail extends AbstractAnalyzer {
-  private Logger logger = Logger.getLogger(QuickGrail.class.getName());
+    private Logger logger = Logger.getLogger(CommandLine.class.getName());
 
   private class SocketListener implements Runnable {
     private ServerSocket serverSocket;

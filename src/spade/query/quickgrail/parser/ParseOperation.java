@@ -21,26 +21,32 @@ package spade.query.quickgrail.parser;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.parser.ParseExpression;
+import spade.query.quickgrail.parser.ParseString;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
-public class ParseOperation extends ParseExpression {
-  private ParseExpression subject;
-  private ParseString operator;
-  private ArrayList<ParseExpression> operands;
+public class ParseOperation extends spade.query.quickgrail.parser.ParseExpression
+{
+    private spade.query.quickgrail.parser.ParseExpression subject;
+    private spade.query.quickgrail.parser.ParseString operator;
+    private ArrayList<spade.query.quickgrail.parser.ParseExpression> operands;
 
   public ParseOperation(int lineNumber, int columnNumber,
-                        ParseExpression subject, ParseString operator) {
-    super(lineNumber, columnNumber, ParseExpression.ExpressionType.kOperation);
+                        spade.query.quickgrail.parser.ParseExpression subject, spade.query.quickgrail.parser.ParseString operator)
+  {
+      super(lineNumber, columnNumber, spade.query.quickgrail.parser.ParseExpression.ExpressionType.kOperation);
     this.subject = subject;
     this.operator = operator;
-    this.operands = new ArrayList<ParseExpression>();
+      this.operands = new ArrayList<spade.query.quickgrail.parser.ParseExpression>();
   }
 
-  public void addOperand(ParseExpression operand) {
+    public void addOperand(spade.query.quickgrail.parser.ParseExpression operand)
+    {
     operands.add(operand);
   }
 
-  public ParseExpression getSubject() {
+    public spade.query.quickgrail.parser.ParseExpression getSubject()
+    {
     return subject;
   }
 

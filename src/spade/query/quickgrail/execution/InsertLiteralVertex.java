@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Insert a list of vertices into a graph by ID.
  */
-public class InsertLiteralVertex extends Instruction {
+public class InsertLiteralVertex extends Instruction
+{
   // The target graph to insert the vertices.
   private Graph targetGraph;
   // Edge IDs to be inserted.

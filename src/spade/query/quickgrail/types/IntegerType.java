@@ -19,18 +19,24 @@
  */
 package spade.query.quickgrail.types;
 
-public class IntegerType extends Type {
-  static private IntegerType instance;
+import spade.query.quickgrail.types.Type;
+import spade.query.quickgrail.types.TypeID;
 
-  public static IntegerType GetInstance() {
+public class IntegerType extends Type
+{
+    static private spade.query.quickgrail.types.IntegerType instance;
+
+    public static spade.query.quickgrail.types.IntegerType GetInstance()
+    {
     if (instance == null) {
-      instance = new IntegerType();
+        instance = new spade.query.quickgrail.types.IntegerType();
     }
     return instance;
   }
 
   @Override
-  public TypeID getTypeID() {
+  public spade.query.quickgrail.types.TypeID getTypeID()
+  {
     return TypeID.kInteger;
   }
 

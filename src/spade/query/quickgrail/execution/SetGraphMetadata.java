@@ -30,7 +30,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * This class is not yet used in the SPADE integrated QuickGrail.
  */
-public class SetGraphMetadata extends Instruction {
+public class SetGraphMetadata extends Instruction
+{
   private static final String kDigits = "0123456789ABCDEF";
 
   public enum Component {

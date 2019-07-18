@@ -21,10 +21,12 @@ package spade.query.quickgrail.parser;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.parser.ParseExpression;
 import spade.query.quickgrail.types.TypedValue;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
-public class ParseLiteral extends ParseExpression {
+public class ParseLiteral extends spade.query.quickgrail.parser.ParseExpression
+{
   private TypedValue literalValue;
 
   public ParseLiteral(int lineNumber, int columnNumber, TypedValue literalValue) {

@@ -21,12 +21,15 @@ package spade.query.quickgrail.entities;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.entities.Entity;
+import spade.query.quickgrail.entities.EntityType;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
 /**
  * This class is not yet used in the SPADE integrated QuickGrail.
  */
-public class GraphMetadata extends Entity {
+public class GraphMetadata extends Entity
+{
   private String name;
 
   public GraphMetadata(String name) {
@@ -46,7 +49,8 @@ public class GraphMetadata extends Entity {
   }
 
   @Override
-  public EntityType getEntityType() {
+  public spade.query.quickgrail.entities.EntityType getEntityType()
+  {
     return EntityType.kGraphMetadata;
   }
 

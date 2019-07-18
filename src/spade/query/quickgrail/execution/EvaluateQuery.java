@@ -21,13 +21,16 @@ package spade.query.quickgrail.execution;
 
 import java.util.ArrayList;
 
+import spade.query.quickgrail.execution.ExecutionContext;
+import spade.query.quickgrail.execution.Instruction;
 import spade.query.quickgrail.kernel.Environment;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
 /**
  * Evaluate an arbitrary SQL query (that is supported by Quickstep).
  */
-public class EvaluateQuery extends Instruction {
+public class EvaluateQuery extends Instruction
+{
   private String sqlQuery;
 
   public EvaluateQuery(String sqlQuery) {

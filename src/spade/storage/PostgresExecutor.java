@@ -17,9 +17,17 @@
  along with this program. If not, see <http://www.gnu.org/licenses/>.
  --------------------------------------------------------------------------------
  */
-package spade.storage.quickstep;
+package spade.storage;
+
+import spade.core.AbstractStorage;
+import spade.storage.quickstep.QuickstepClient;
+import spade.storage.quickstep.QuickstepFailure;
+import spade.storage.quickstep.QuickstepResponse;
 
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -31,10 +39,12 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static spade.core.AbstractQuery.getCurrentStorage;
+
 /**
  * Helper class for encapsulation of related methods and asynchronous execution.
  */
-public class QuickstepExecutor
+public class PostgresExecutor
 {
     private QuickstepClient client;
     private ExecutorService queryExecutor;
@@ -120,7 +130,7 @@ public class QuickstepExecutor
 
     private Lock transactionLock = new ReentrantLock();
 
-    public QuickstepExecutor(QuickstepClient client)
+    public PostgresExecutor(QuickstepClient client)
     {
         this.client = client;
         this.numRetriesOnFailure = 0;
@@ -216,12 +226,35 @@ public class QuickstepExecutor
         return finalizeQuery();
     }
 
+    public void executeUpdate(String query)
+    {
+        AbstractStorage currentStorage = getCurrentStorage();
+        ((PostgreSQL) currentStorage).executeUpdate(query);
+    }
+
     /**
      * Submit a query and wait for the result.
      */
     public String executeQuery(String query)
     {
-        return executeQuery(query, null);
+        AbstractStorage currentStorage = getCurrentStorage();
+        ResultSet result = (ResultSet) currentStorage.executeQuery(query);
+        logger.log(Level.INFO, "result: " + result);
+        String answer = "";
+        try
+        {
+            result.next();
+            answer = result.getString(1);
+            logger.log(Level.INFO, "answer: " + answer);
+            Scanner scanner = new Scanner(System.in);
+            answer = scanner.nextLine();
+            logger.log(Level.INFO, "answer: " + answer);
+        }
+        catch(SQLException e)
+        {
+            e.printStackTrace();
+        }
+        return answer;
     }
 
     /**

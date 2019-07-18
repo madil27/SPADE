@@ -29,7 +29,8 @@ import spade.storage.quickstep.QuickstepExecutor;
 /**
  * Sample a subset of vertices / edges from a graph.
  */
-public class LimitGraph extends Instruction {
+public class LimitGraph extends Instruction
+{
   // Output graph.
   private Graph targetGraph;
   // Input graph.

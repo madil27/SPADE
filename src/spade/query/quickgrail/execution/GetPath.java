@@ -30,7 +30,8 @@ import spade.storage.quickstep.QuickstepExecutor;
  * Get a graph that includes all the paths from a set of source vertices to a
  * set of destination vertices.
  */
-public class GetPath extends Instruction {
+public class GetPath extends Instruction
+{
   // Output graph.
   private Graph targetGraph;
   // Input graph.

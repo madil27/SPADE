@@ -19,6 +19,7 @@
  */
 package spade.query.quickgrail.entities;
 
+import spade.query.quickgrail.entities.EntityType;
 import spade.query.quickgrail.utility.TreeStringSerializable;
 
 /**
