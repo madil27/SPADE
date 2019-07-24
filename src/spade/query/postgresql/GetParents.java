@@ -33,68 +33,68 @@ import static spade.core.AbstractStorage.PRIMARY_KEY;
  */
 public class GetParents extends PostgreSQL<Graph>
 {
-    public GetParents()
-    {
-        register();
-    }
+	public GetParents()
+	{
+		register();
+	}
 
-    @Override
-    public Graph execute(String argument_string)
-    {
-        Pattern argument_pattern = Pattern.compile(",");
-        String[] arguments = argument_pattern.split(argument_string);
-        String constraints = arguments[0].trim();
-        Map<String, List<String>> parameters = parseConstraints(constraints);
-        Integer limit = null;
-        if(arguments.length > 1)
-            limit = Integer.parseInt(arguments[1].trim());
+	@Override
+	public Graph execute(String argument_string)
+	{
+		Pattern argument_pattern = Pattern.compile(",");
+		String[] arguments = argument_pattern.split(argument_string);
+		String constraints = arguments[0].trim();
+		Map<String, List<String>> parameters = parseConstraints(constraints);
+		Integer limit = null;
+		if(arguments.length > 1)
+			limit = Integer.parseInt(arguments[1].trim());
 
-        return execute(parameters, limit);
-    }
+		return execute(parameters, limit);
+	}
 
-    @Override
-    public Graph execute(Map<String, List<String>> parameters, Integer limit)
-    {
-        //TODO: add support for more selections
-        // implicit assumption that parameters contain annotation CHILD_VERTEX_KEY
-        StringBuilder query = new StringBuilder(100);
+	@Override
+	public Graph execute(Map<String, List<String>> parameters, Integer limit)
+	{
+		//TODO: add support for more selections
+		// implicit assumption that parameters contain annotation CHILD_VERTEX_KEY
+		StringBuilder query = new StringBuilder(100);
 
-        query.append("SELECT * FROM ");
-        query.append(VERTEX_TABLE);
-        query.append(" WHERE ");
-        query.append("\"");
-        query.append(PRIMARY_KEY);
-        query.append("\"");
-        query.append(" IN(");
-        query.append("SELECT ");
-        query.append("\"");
-        query.append(PARENT_VERTEX_KEY);
-        query.append("\"");
-        query.append(" FROM ");
-        query.append(EDGE_TABLE);
-        query.append(" WHERE ");
-        query.append("\"");
-        query.append(CHILD_VERTEX_KEY);
-        query.append("\"");
-        query.append(" = ");
-        query.append("'");
-        List<String> entry = parameters.get(CHILD_VERTEX_KEY);
-        if(entry != null)
-            query.append(entry.get(COL_VALUE));
-        else
-            return null;
-        query.append("'");
-        query.append(")");
-        if(limit != null)
-            query.append(" LIMIT ").append(limit);
-        query.append(";");
+		query.append("SELECT * FROM ");
+		query.append(VERTEX_TABLE);
+		query.append(" WHERE ");
+		query.append("\"");
+		query.append(PRIMARY_KEY);
+		query.append("\"");
+		query.append(" IN(");
+		query.append("SELECT ");
+		query.append("\"");
+		query.append(PARENT_VERTEX_KEY);
+		query.append("\"");
+		query.append(" FROM ");
+		query.append(EDGE_TABLE);
+		query.append(" WHERE ");
+		query.append("\"");
+		query.append(CHILD_VERTEX_KEY);
+		query.append("\"");
+		query.append(" = ");
+		query.append("'");
+		List<String> entry = parameters.get(CHILD_VERTEX_KEY);
+		if(entry != null)
+			query.append(entry.get(COL_VALUE));
+		else
+			return null;
+		query.append("'");
+		query.append(")");
+		if(limit != null)
+			query.append(" LIMIT ").append(limit);
+		query.append(";");
 
-        Logger.getLogger(GetParents.class.getName()).log(Level.INFO, "Following query: " + query.toString());
-        Graph parents = new Graph();
-        parents.vertexSet().addAll(prepareVertexSetFromSQLResult(query.toString()));
+		Logger.getLogger(GetParents.class.getName()).log(Level.INFO, "Following query: " + query.toString());
+		Graph parents = new Graph();
+		parents.vertexSet().addAll(prepareVertexSetFromSQLResult(query.toString()));
 
 
-        return parents;
-    }
+		return parents;
+	}
 
 }

@@ -32,65 +32,65 @@ import java.util.regex.Pattern;
  */
 public class GetEdge extends PostgreSQL<Set<AbstractEdge>>
 {
-    public GetEdge()
-    {
-        register();
-    }
+	public GetEdge()
+	{
+		register();
+	}
 
-    @Override
-    public Set<AbstractEdge> execute(String argument_string)
-    {
-        Pattern argument_pattern = Pattern.compile(",");
-        String[] arguments = argument_pattern.split(argument_string);
-        String constraints = arguments[0].trim();
-        Map<String, List<String>> parameters = parseConstraints(constraints);
-        Integer limit = null;
-        if(arguments.length > 1)
-            limit = Integer.parseInt(arguments[1].trim());
+	@Override
+	public Set<AbstractEdge> execute(String argument_string)
+	{
+		Pattern argument_pattern = Pattern.compile(",");
+		String[] arguments = argument_pattern.split(argument_string);
+		String constraints = arguments[0].trim();
+		Map<String, List<String>> parameters = parseConstraints(constraints);
+		Integer limit = null;
+		if(arguments.length > 1)
+			limit = Integer.parseInt(arguments[1].trim());
 
-        return execute(parameters, limit);
-    }
+		return execute(parameters, limit);
+	}
 
-    @Override
-    public Set<AbstractEdge> execute(Map<String, List<String>> parameters, Integer limit)
-    {
-        Set<AbstractEdge> edgeSet = null;
-        StringBuilder query = new StringBuilder(100);
-        try
-        {
-            query.append("SELECT * FROM ");
-            query.append(EDGE_TABLE);
-            query.append(" WHERE ");
-            for (Map.Entry<String, List<String>> entry : parameters.entrySet())
-            {
-                List<String> values = entry.getValue();
-                String colName = entry.getKey();
-                query.append("\"");
-                query.append(colName);
-                query.append("\"");
-                query.append(values.get(COMPARISON_OPERATOR));
-                query.append("'");
-                query.append(values.get(COL_VALUE));
-                query.append("'");
-                query.append(" ");
-                String boolOperator = values.get(BOOLEAN_OPERATOR);
-                if (boolOperator != null)
-                    query.append(boolOperator).append(" ");
-            }
-            if (limit != null)
-                query.append(" LIMIT ").append(limit);
-            query.append(";");
+	@Override
+	public Set<AbstractEdge> execute(Map<String, List<String>> parameters, Integer limit)
+	{
+		Set<AbstractEdge> edgeSet = null;
+		StringBuilder query = new StringBuilder(100);
+		try
+		{
+			query.append("SELECT * FROM ");
+			query.append(EDGE_TABLE);
+			query.append(" WHERE ");
+			for(Map.Entry<String, List<String>> entry : parameters.entrySet())
+			{
+				List<String> values = entry.getValue();
+				String colName = entry.getKey();
+				query.append("\"");
+				query.append(colName);
+				query.append("\"");
+				query.append(values.get(COMPARISON_OPERATOR));
+				query.append("'");
+				query.append(values.get(COL_VALUE));
+				query.append("'");
+				query.append(" ");
+				String boolOperator = values.get(BOOLEAN_OPERATOR);
+				if(boolOperator != null)
+					query.append(boolOperator).append(" ");
+			}
+			if(limit != null)
+				query.append(" LIMIT ").append(limit);
+			query.append(";");
 
-            Logger.getLogger(GetEdge.class.getName()).log(Level.INFO, "Following query: " + query.toString());
-            edgeSet = prepareEdgeSetFromSQLResult(query.toString());
-            if(!CollectionUtils.isEmpty(edgeSet))
-                return edgeSet;
-        }
-        catch (Exception ex)
-        {
-            Logger.getLogger(GetEdge.class.getName()).log(Level.SEVERE, "Error creating edge set!", ex);
-        }
+			Logger.getLogger(GetEdge.class.getName()).log(Level.INFO, "Following query: " + query.toString());
+			edgeSet = prepareEdgeSetFromSQLResult(query.toString());
+			if(!CollectionUtils.isEmpty(edgeSet))
+				return edgeSet;
+		}
+		catch(Exception ex)
+		{
+			Logger.getLogger(GetEdge.class.getName()).log(Level.SEVERE, "Error creating edge set!", ex);
+		}
 
-        return edgeSet;
-    }
+		return edgeSet;
+	}
 }

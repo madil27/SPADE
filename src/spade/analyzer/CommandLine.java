@@ -36,13 +36,13 @@ import spade.core.AbstractQuery;
 import spade.core.AbstractStorage;
 import spade.core.Kernel;
 import spade.query.postgresql.QuickGrailExecutor;
+import spade.query.postgresql.kernel.Environment;
 import spade.storage.PostgresExecutor;
 
 import static spade.core.AbstractQuery.getCurrentStorage;
 
 public class CommandLine extends AbstractAnalyzer
 {
-    private QuickGrailExecutor executor;
     private static Logger logger = Logger.getLogger(CommandLine.class.getName());
 
     public CommandLine()
@@ -85,6 +85,7 @@ public class CommandLine extends AbstractAnalyzer
                 try
                 {
                     serverSocket.close();
+                    logger.log(Level.INFO, "Server socket closed");
                 }
                 catch(Exception ex)
                 {
@@ -103,17 +104,18 @@ public class CommandLine extends AbstractAnalyzer
             logger.log(Level.SEVERE, "Server Socket not initialized");
             return false;
         }
-        PostgresExecutor ps = new PostgresExecutor(null);
-        executor = new QuickGrailExecutor(ps);
         new Thread(new SocketListener(serverSocket), "SocketListener-Thread").start();
         return true;
     }
 
     private class QueryConnection extends AbstractAnalyzer.QueryConnection
     {
+        private QuickGrailExecutor executor;
+
         public QueryConnection(Socket socket)
         {
             super(socket);
+            this.executor = new QuickGrailExecutor();
         }
 
         @Override
@@ -126,10 +128,10 @@ public class CommandLine extends AbstractAnalyzer
                 BufferedReader queryInputStream = new BufferedReader(new InputStreamReader(inStream));
                 ObjectOutputStream responseOutputStream = new ObjectOutputStream(outStream);
 
-                boolean quitting = false;
-                while(!quitting && !SHUTDOWN)
+                boolean exit = false;
+                while(!exit && !SHUTDOWN)
                 {
-                    quitting = processRequest(queryInputStream, responseOutputStream);
+                    exit = processRequest(queryInputStream, responseOutputStream);
                 }
 
                 queryInputStream.close();
@@ -139,7 +141,7 @@ public class CommandLine extends AbstractAnalyzer
             }
             catch(Exception ex)
             {
-                logger.log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, "Error processing request!", ex);
             }
             finally
             {
@@ -164,6 +166,7 @@ public class CommandLine extends AbstractAnalyzer
                 String output = parseSetStorage(query);
                 logger.log(Level.INFO, output);
                 outputStream.writeObject(output);
+                executor.createEnvironment();
                 return false;
             }
             if(getCurrentStorage() == null)
@@ -183,7 +186,7 @@ public class CommandLine extends AbstractAnalyzer
                 return true;
             }
 
-            outputStream.writeObject(executor.execute(query));
+            outputStream.writeObject(this.executor.execute(query));
             return false;
         }
 

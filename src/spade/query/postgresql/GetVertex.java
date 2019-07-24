@@ -31,65 +31,65 @@ import java.util.regex.Pattern;
  */
 public class GetVertex extends PostgreSQL<Set<AbstractVertex>>
 {
-    public GetVertex()
-    {
-        register();
-    }
+	public GetVertex()
+	{
+		register();
+	}
 
-    @Override
-    public Set<AbstractVertex> execute(String argument_string)
-    {
-        Pattern argument_pattern = Pattern.compile(",");
-        String[] arguments = argument_pattern.split(argument_string);
-        String constraints = arguments[0].trim();
-        Map<String, List<String>> parameters = parseConstraints(constraints);
-        Integer limit = null;
-        if(arguments.length > 1)
-            limit = Integer.parseInt(arguments[1].trim());
+	@Override
+	public Set<AbstractVertex> execute(String argument_string)
+	{
+		Pattern argument_pattern = Pattern.compile(",");
+		String[] arguments = argument_pattern.split(argument_string);
+		String constraints = arguments[0].trim();
+		Map<String, List<String>> parameters = parseConstraints(constraints);
+		Integer limit = null;
+		if(arguments.length > 1)
+			limit = Integer.parseInt(arguments[1].trim());
 
-        return execute(parameters, limit);
-    }
+		return execute(parameters, limit);
+	}
 
-    @Override
-    public Set<AbstractVertex> execute(Map<String, List<String>> parameters, Integer limit)
-    {
-        Set<AbstractVertex> vertexSet = null;
-        StringBuilder query = new StringBuilder(100);
-        try
-        {
-            query.append("SELECT * FROM ");
-            query.append(VERTEX_TABLE);
-            query.append(" WHERE ");
-            for (Map.Entry<String, List<String>> entry : parameters.entrySet())
-            {
-                String colName = entry.getKey();
-                List<String> values = entry.getValue();
-                query.append("\"");
-                query.append(colName);
-                query.append("\"");
-                query.append(values.get(COMPARISON_OPERATOR));
-                query.append("'");
-                query.append(values.get(COL_VALUE));
-                query.append("'");
-                query.append(" ");
-                String boolOperator = values.get(BOOLEAN_OPERATOR);
-                if (boolOperator != null)
-                    query.append(boolOperator).append(" ");
-            }
-            if (limit != null)
-                query.append(" LIMIT ").append(limit);
-            query.append(";");
+	@Override
+	public Set<AbstractVertex> execute(Map<String, List<String>> parameters, Integer limit)
+	{
+		Set<AbstractVertex> vertexSet = null;
+		StringBuilder query = new StringBuilder(100);
+		try
+		{
+			query.append("SELECT * FROM ");
+			query.append(VERTEX_TABLE);
+			query.append(" WHERE ");
+			for(Map.Entry<String, List<String>> entry : parameters.entrySet())
+			{
+				String colName = entry.getKey();
+				List<String> values = entry.getValue();
+				query.append("\"");
+				query.append(colName);
+				query.append("\"");
+				query.append(values.get(COMPARISON_OPERATOR));
+				query.append("'");
+				query.append(values.get(COL_VALUE));
+				query.append("'");
+				query.append(" ");
+				String boolOperator = values.get(BOOLEAN_OPERATOR);
+				if(boolOperator != null)
+					query.append(boolOperator).append(" ");
+			}
+			if(limit != null)
+				query.append(" LIMIT ").append(limit);
+			query.append(";");
 
-            Logger.getLogger(GetVertex.class.getName()).log(Level.INFO, "Following query: " + query.toString());
-            vertexSet = prepareVertexSetFromSQLResult(query.toString());
-            if (!CollectionUtils.isEmpty(vertexSet))
-                return vertexSet;
-        }
-        catch (Exception ex)
-        {
-            Logger.getLogger(GetVertex.class.getName()).log(Level.SEVERE, "Error creating vertex set from the following query: \n" + query.toString(), ex);
-        }
+			Logger.getLogger(GetVertex.class.getName()).log(Level.INFO, "Following query: " + query.toString());
+			vertexSet = prepareVertexSetFromSQLResult(query.toString());
+			if(!CollectionUtils.isEmpty(vertexSet))
+				return vertexSet;
+		}
+		catch(Exception ex)
+		{
+			Logger.getLogger(GetVertex.class.getName()).log(Level.SEVERE, "Error creating vertex set from the following query: \n" + query.toString(), ex);
+		}
 
-        return vertexSet;
-    }
+		return vertexSet;
+	}
 }

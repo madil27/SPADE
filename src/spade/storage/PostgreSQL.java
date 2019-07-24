@@ -19,6 +19,10 @@
  */
 package spade.storage;
 
+import com.mysql.jdbc.StringUtils;
+import org.postgresql.PGConnection;
+import org.postgresql.copy.PGCopyInputStream;
+import org.postgresql.core.BaseConnection;
 import spade.core.AbstractEdge;
 import spade.core.AbstractVertex;
 import spade.core.Cache;
@@ -510,83 +514,86 @@ public class PostgreSQL extends SQL
 
     private void flushBulkEdges(boolean forcedFlush)
     {
-        if(( (edgeCount > 0) && (edgeCount % GLOBAL_TX_SIZE == 0) ) || forcedFlush)
+        if(edgeCount > 0)
         {
-            StringBuilder edgeHashes = new StringBuilder((int) (edgeCount * 32));
-            String edgeFileName = "/tmp/bulk_edges.csv";
-            try
+            if((edgeCount % GLOBAL_TX_SIZE == 0) || forcedFlush)
             {
-                File file = new File(edgeFileName);
-                file.createNewFile();
-                if(!(file.setWritable(true, false)
-                    && file.setReadable(true, false)))
+                StringBuilder edgeHashes = new StringBuilder((int) (edgeCount * 32));
+                String edgeFileName = "/tmp/bulk_edges.csv";
+                try
                 {
-                    logger.log(Level.SEVERE, "Permission denied to read/write from edge buffer files!");
-                    return;
-                }
-                FileWriter fileWriter = new FileWriter(file);
-
-                CSVWriter writer = new CSVWriter(fileWriter);
-                writer.writeNext(edgeColumnNames.toArray(new String[edgeColumnNames.size()]));
-                for(Map<String, String> edge: edgeList)
-                {
-                    ArrayList<String> annotationValues = new ArrayList<>();
-                    for(String edgeColumnName : edgeColumnNames)
+                    File file = new File(edgeFileName);
+                    file.createNewFile();
+                    if(!(file.setWritable(true, false)
+                            && file.setReadable(true, false)))
                     {
-                        String annotationValue = edge.get(edgeColumnName);
-                        annotationValues.add(annotationValue);
-                        if(edgeColumnName.equals(PRIMARY_KEY))
-                        {
-                            edgeHashes.append("(");
-                            edgeHashes.append("'");
-                            edgeHashes.append(annotationValue);
-                            edgeHashes.append("'), ");
-                        }
+                        logger.log(Level.SEVERE, "Permission denied to read/write from edge buffer files!");
+                        return;
                     }
-                    writer.writeNext(annotationValues.toArray(new String[annotationValues.size()]));
-                }
-                writer.close();
-            }
-            catch(Exception ex)
-            {
-                logger.log(Level.SEVERE, "Error writing edges to file", ex);
-            }
+                    FileWriter fileWriter = new FileWriter(file);
 
-            try
-            {
-                String copyTableString = "COPY "
-                        + EDGE_TABLE
-                        + " FROM '"
-                        + edgeFileName
-                        + "' CSV HEADER";
-                Statement s = dbConnection.createStatement();
-                s.execute(copyTableString);
-                if(edgeHashes.length() > 0)
-                {
-                    String traceBaseEdgeInsert = "INSERT INTO "
-                            + TRACE_BASE_EDGE
-                            + "(\""
-                            + PRIMARY_KEY
-                            + "\") VALUES "
-                            + edgeHashes.substring(0, edgeHashes.length() - 2);
-                    s.execute(traceBaseEdgeInsert);
+                    CSVWriter writer = new CSVWriter(fileWriter);
+                    writer.writeNext(edgeColumnNames.toArray(new String[edgeColumnNames.size()]));
+                    for(Map<String, String> edge : edgeList)
+                    {
+                        ArrayList<String> annotationValues = new ArrayList<>();
+                        for(String edgeColumnName : edgeColumnNames)
+                        {
+                            String annotationValue = edge.get(edgeColumnName);
+                            annotationValues.add(annotationValue);
+                            if(edgeColumnName.equals(PRIMARY_KEY))
+                            {
+                                edgeHashes.append("(");
+                                edgeHashes.append("'");
+                                edgeHashes.append(annotationValue);
+                                edgeHashes.append("'), ");
+                            }
+                        }
+                        writer.writeNext(annotationValues.toArray(new String[annotationValues.size()]));
+                    }
+                    writer.close();
                 }
-                s.close();
-                globalTxCheckin(true);
-                edgeList.clear();
-                logger.log(Level.INFO, "Bulk uploaded at max " + GLOBAL_TX_SIZE + " edges to databases. Total edges: " + edgeCount);
-                edgeBatches++;
-                long currentTime = System.currentTimeMillis();
-                if((currentTime - lastReportedTime) >= reportEveryMs)
+                catch(Exception ex)
                 {
-                    lastReportedTime = currentTime;
-                    logger.log(Level.INFO, "edge batches flushed per " + reportingInterval + " sec: " + edgeBatches);
-                    edgeBatches = 0;
+                    logger.log(Level.SEVERE, "Error writing edges to file", ex);
                 }
-            }
-            catch (Exception ex)
-            {
-                logger.log(Level.SEVERE, null, ex);
+
+                try
+                {
+                    String copyTableString = "COPY "
+                            + EDGE_TABLE
+                            + " FROM '"
+                            + edgeFileName
+                            + "' CSV HEADER";
+                    Statement s = dbConnection.createStatement();
+                    s.execute(copyTableString);
+                    if(edgeHashes.length() > 0)
+                    {
+                        String traceBaseEdgeInsert = "INSERT INTO "
+                                + TRACE_BASE_EDGE
+                                + "(\""
+                                + PRIMARY_KEY
+                                + "\") VALUES "
+                                + edgeHashes.substring(0, edgeHashes.length() - 2);
+                        s.execute(traceBaseEdgeInsert);
+                    }
+                    s.close();
+                    globalTxCheckin(true);
+                    edgeList.clear();
+                    logger.log(Level.INFO, "Bulk uploaded at max " + GLOBAL_TX_SIZE + " edges to databases. Total edges: " + edgeCount);
+                    edgeBatches++;
+                    long currentTime = System.currentTimeMillis();
+                    if((currentTime - lastReportedTime) >= reportEveryMs)
+                    {
+                        lastReportedTime = currentTime;
+                        logger.log(Level.INFO, "edge batches flushed per " + reportingInterval + " sec: " + edgeBatches);
+                        edgeBatches = 0;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    logger.log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
@@ -609,82 +616,85 @@ public class PostgreSQL extends SQL
 
     private void flushBulkVertices(boolean forcedFlush)
     {
-        if(( (vertexCount > 0) && (vertexCount % GLOBAL_TX_SIZE == 0) ) || forcedFlush)
+        if(vertexCount > 0)
         {
-            StringBuilder vertexHashes = new StringBuilder((int) (vertexCount * 32));
-            String vertexFileName = "/tmp/bulk_vertices.csv";
-            try
+            if((vertexCount % GLOBAL_TX_SIZE == 0) || forcedFlush)
             {
-                File file = new File(vertexFileName);
-                file.createNewFile();
-                if(!(file.setWritable(true, false)
-                        && file.setReadable(true, false)))
+                StringBuilder vertexHashes = new StringBuilder((int) (vertexCount * 32));
+                String vertexFileName = "/tmp/bulk_vertices.csv";
+                try
                 {
-                    logger.log(Level.SEVERE, "Permission denied to read/write from vertex buffer files!");
-                    return;
-                }
-                FileWriter fileWriter = new FileWriter(file);
-                CSVWriter writer = new CSVWriter(fileWriter);
-                writer.writeNext(vertexColumnNames.toArray(new String[vertexColumnNames.size()]));
-                for(Map<String, String> vertex: vertexList)
-                {
-                    ArrayList<String> annotationValues = new ArrayList<>();
-                    for(String vertexColumnName : vertexColumnNames)
+                    File file = new File(vertexFileName);
+                    file.createNewFile();
+                    if(!(file.setWritable(true, false)
+                            && file.setReadable(true, false)))
                     {
-                        String annotationValue = vertex.get(vertexColumnName);
-                        annotationValues.add(annotationValue);
-                        if(vertexColumnName.equals(PRIMARY_KEY))
-                        {
-                            vertexHashes.append("(");
-                            vertexHashes.append("'");
-                            vertexHashes.append(annotationValue);
-                            vertexHashes.append("'), ");
-                        }
+                        logger.log(Level.SEVERE, "Permission denied to read/write from vertex buffer files!");
+                        return;
                     }
-                    writer.writeNext(annotationValues.toArray(new String[annotationValues.size()]));
+                    FileWriter fileWriter = new FileWriter(file);
+                    CSVWriter writer = new CSVWriter(fileWriter);
+                    writer.writeNext(vertexColumnNames.toArray(new String[vertexColumnNames.size()]));
+                    for(Map<String, String> vertex : vertexList)
+                    {
+                        ArrayList<String> annotationValues = new ArrayList<>();
+                        for(String vertexColumnName : vertexColumnNames)
+                        {
+                            String annotationValue = vertex.get(vertexColumnName);
+                            annotationValues.add(annotationValue);
+                            if(vertexColumnName.equals(PRIMARY_KEY))
+                            {
+                                vertexHashes.append("(");
+                                vertexHashes.append("'");
+                                vertexHashes.append(annotationValue);
+                                vertexHashes.append("'), ");
+                            }
+                        }
+                        writer.writeNext(annotationValues.toArray(new String[annotationValues.size()]));
+                    }
+                    writer.close();
                 }
-                writer.close();
-            }
-            catch(Exception ex)
-            {
-                logger.log(Level.SEVERE, "Error writing vertices to file", ex);
-            }
+                catch(Exception ex)
+                {
+                    logger.log(Level.SEVERE, "Error writing vertices to file", ex);
+                }
 
-            try
-            {
-                String copyTableString = "COPY "
-                        + VERTEX_TABLE
-                        + " FROM '"
-                        + vertexFileName
-                        + "' CSV HEADER";
-                Statement s = dbConnection.createStatement();
-                s.execute(copyTableString);
-                if(vertexHashes.length() > 0)
+                try
                 {
-                    String traceBaseVertexInsert = "INSERT INTO "
-                            + TRACE_BASE_VERTEX
-                            + "(\""
-                            + PRIMARY_KEY
-                            + "\") VALUES "
-                            + vertexHashes.substring(0, vertexHashes.length() - 2);
-                    s.execute(traceBaseVertexInsert);
+                    String copyTableString = "COPY "
+                            + VERTEX_TABLE
+                            + " FROM '"
+                            + vertexFileName
+                            + "' CSV HEADER";
+                    Statement s = dbConnection.createStatement();
+                    s.execute(copyTableString);
+                    if(vertexHashes.length() > 0)
+                    {
+                        String traceBaseVertexInsert = "INSERT INTO "
+                                + TRACE_BASE_VERTEX
+                                + "(\""
+                                + PRIMARY_KEY
+                                + "\") VALUES "
+                                + vertexHashes.substring(0, vertexHashes.length() - 2);
+                        s.execute(traceBaseVertexInsert);
+                    }
+                    s.close();
+                    globalTxCheckin(true);
+                    vertexList.clear();
+                    logger.log(Level.INFO, "Bulk uploaded at max " + GLOBAL_TX_SIZE + " vertices to databases. Total vertices: " + vertexCount);
+                    vertexBatches++;
+                    long currentTime = System.currentTimeMillis();
+                    if((currentTime - lastReportedTime) >= reportEveryMs)
+                    {
+                        lastReportedTime = currentTime;
+                        logger.log(Level.INFO, "vertex batches flushed per " + reportingInterval + " sec: " + vertexBatches);
+                        vertexBatches = 0;
+                    }
                 }
-                s.close();
-                globalTxCheckin(true);
-                vertexList.clear();
-                logger.log(Level.INFO, "Bulk uploaded at max " + GLOBAL_TX_SIZE + " vertices to databases. Total vertices: " + vertexCount);
-                vertexBatches++;
-                long currentTime = System.currentTimeMillis();
-                if((currentTime - lastReportedTime) >= reportEveryMs)
+                catch(Exception ex)
                 {
-                    lastReportedTime = currentTime;
-                    logger.log(Level.INFO, "vertex batches flushed per " + reportingInterval + " sec: " + vertexBatches);
-                    vertexBatches = 0;
+                    logger.log(Level.SEVERE, null, ex);
                 }
-            }
-            catch (Exception ex)
-            {
-                logger.log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -805,29 +815,46 @@ public class PostgreSQL extends SQL
             Statement queryStatement = dbConnection.createStatement();
             if(CURSOR_FETCH_SIZE > 0)
                 queryStatement.setFetchSize(CURSOR_FETCH_SIZE);
-            result = queryStatement.executeQuery(query);
+            boolean resultExists = queryStatement.execute(query);
+            if(resultExists)
+            {
+                result = queryStatement.getResultSet();
+            }
+            globalTxCheckin(true);
         }
-        catch (SQLException ex)
+        catch(Exception ex)
         {
             logger.log(Level.SEVERE, "PostgreSQL query execution not successful!", ex);
         }
-
         return result;
     }
 
-    public void executeUpdate(String query)
+    public String executeCopy(String query)
     {
         try
         {
             globalTxCheckin(true);
-            Statement queryStatement = dbConnection.createStatement();
-            if(CURSOR_FETCH_SIZE > 0)
-                queryStatement.setFetchSize(CURSOR_FETCH_SIZE);
-            queryStatement.executeUpdate(query);
+            PGCopyInputStream inputStream = new PGCopyInputStream((PGConnection) dbConnection, query);
+            StringBuilder resultBuffer = new StringBuilder(500);
+            byte[] buffer = new byte[100];
+            while(inputStream.read(buffer) > 0)
+            {
+                resultBuffer.append(new String(buffer));
+            }
+            String result = resultBuffer.toString();
+            if(!StringUtils.isNullOrEmpty(result))
+            {
+                // remove all non-ASCII characters
+                result = result.replaceAll("[^\\x00-\\x7F]", "");
+                result = result.trim();
+            }
+            logger.log(Level.INFO, "result: " + result);
+            return result;
         }
-        catch(SQLException ex)
+        catch(Exception ex)
         {
-            logger.log(Level.SEVERE, "PostgreSQL query execution not successful!", ex);
+            logger.log(Level.SEVERE, "Error reading from PostgreSQL copy input stream!", ex);
         }
+        return null;
     }
 }
