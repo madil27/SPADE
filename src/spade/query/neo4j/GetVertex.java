@@ -32,51 +32,51 @@ import java.util.regex.Pattern;
  */
 public class GetVertex extends Neo4j<Set<AbstractVertex>>
 {
-    @Override
-    public Set<AbstractVertex> execute(String argument_string)
-    {
-        Pattern argument_pattern = Pattern.compile(",");
-        String[] arguments = argument_pattern.split(argument_string);
-        String constraints = arguments[0].trim();
-        Map<String, List<String>> parameters = parseConstraints(constraints);
-        Integer limit = null;
-        if(arguments.length > 1)
-            limit = Integer.parseInt(arguments[1].trim());
+	@Override
+	public Set<AbstractVertex> execute(String argument_string)
+	{
+		Pattern argument_pattern = Pattern.compile(",");
+		String[] arguments = argument_pattern.split(argument_string);
+		String constraints = arguments[0].trim();
+		Map<String, List<String>> parameters = parseConstraints(constraints);
+		Integer limit = null;
+		if(arguments.length > 1)
+			limit = Integer.parseInt(arguments[1].trim());
 
-        return execute(parameters, limit);
-    }
+		return execute(parameters, limit);
+	}
 
-    @Override
-    public Set<AbstractVertex> execute(Map<String, List<String>> parameters, Integer limit)
-    {
-        Set<AbstractVertex> vertexSet = null;
-        try
-        {
-            StringBuilder vertexQueryBuilder = new StringBuilder(50);
-            for (Map.Entry<String, List<String>> entry : parameters.entrySet())
-            {
-                String colName = entry.getKey();
-                List<String> values = entry.getValue();
-                vertexQueryBuilder.append(colName);
-                vertexQueryBuilder.append(":");
-                vertexQueryBuilder.append(values.get(COL_VALUE));
-                String boolOperator = values.get(BOOLEAN_OPERATOR);
-                if (boolOperator != null)
-                {
-                    vertexQueryBuilder.append(boolOperator);
-                }
-            }
-            spade.storage.Neo4j neo4jStorage = (spade.storage.Neo4j) currentStorage;
-            Graph result = neo4jStorage.getVertices(vertexQueryBuilder.toString());
-            vertexSet = result.vertexSet();
-            if (!CollectionUtils.isEmpty(vertexSet))
-                return vertexSet;
-        }
-        catch (Exception ex)
-        {
-            Logger.getLogger(GetVertex.class.getName()).log(Level.SEVERE, "Error creating vertex set!", ex);
-        }
+	@Override
+	public Set<AbstractVertex> execute(Map<String, List<String>> parameters, Integer limit)
+	{
+		Set<AbstractVertex> vertexSet = null;
+		try
+		{
+			StringBuilder vertexQueryBuilder = new StringBuilder(50);
+			for(Map.Entry<String, List<String>> entry : parameters.entrySet())
+			{
+				String colName = entry.getKey();
+				List<String> values = entry.getValue();
+				vertexQueryBuilder.append(colName);
+				vertexQueryBuilder.append(":");
+				vertexQueryBuilder.append(values.get(COL_VALUE));
+				String boolOperator = values.get(BOOLEAN_OPERATOR);
+				if(boolOperator != null)
+				{
+					vertexQueryBuilder.append(boolOperator);
+				}
+			}
+			spade.storage.Neo4j neo4jStorage = (spade.storage.Neo4j) currentStorage;
+			Graph result = neo4jStorage.getVertices(vertexQueryBuilder.toString());
+			vertexSet = result.vertexSet();
+			if(!CollectionUtils.isEmpty(vertexSet))
+				return vertexSet;
+		}
+		catch(Exception ex)
+		{
+			Logger.getLogger(GetVertex.class.getName()).log(Level.SEVERE, "Error creating vertex set!", ex);
+		}
 
-        return vertexSet;
-    }
+		return vertexSet;
+	}
 }

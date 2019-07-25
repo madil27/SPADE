@@ -34,7 +34,7 @@ import java.util.logging.Logger;
 import spade.core.AbstractAnalyzer;
 import spade.core.AbstractStorage;
 import spade.core.Kernel;
-import spade.query.quickgrail.QuickGrailExecutor;
+import spade.query.quickstep.QuickGrailExecutor;
 import spade.storage.Quickstep;
 import spade.storage.quickstep.QuickstepClient;
 import spade.storage.quickstep.QuickstepConfiguration;

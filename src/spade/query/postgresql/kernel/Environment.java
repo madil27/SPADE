@@ -24,14 +24,13 @@ import spade.query.postgresql.entities.Graph;
 import spade.query.postgresql.entities.GraphMetadata;
 import spade.query.postgresql.utility.PostgresUtil;
 import spade.query.postgresql.utility.TreeStringSerializable;
-import spade.storage.PostgresExecutor;
+import spade.storage.postgresql.PostgresExecutor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**

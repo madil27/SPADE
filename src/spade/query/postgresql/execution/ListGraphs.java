@@ -27,7 +27,7 @@ import spade.query.postgresql.utility.PostgresUtil;
 import spade.query.postgresql.utility.ResultTable;
 import spade.query.postgresql.utility.Schema;
 import spade.query.postgresql.utility.TreeStringSerializable;
-import spade.storage.PostgresExecutor;
+import spade.storage.postgresql.PostgresExecutor;
 
 import java.util.ArrayList;
 import java.util.Map;

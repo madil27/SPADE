@@ -19,7 +19,7 @@
  */
 package spade.query.postgresql.execution;
 
-import spade.storage.PostgresExecutor;
+import spade.storage.postgresql.PostgresExecutor;
 
 import java.util.ArrayList;
 

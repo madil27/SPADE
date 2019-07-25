@@ -26,7 +26,7 @@ import spade.query.postgresql.kernel.Program;
 import spade.query.postgresql.kernel.Resolver;
 import spade.query.postgresql.parser.DSLParserWrapper;
 import spade.query.postgresql.parser.ParseProgram;
-import spade.storage.PostgresExecutor;
+import spade.storage.postgresql.PostgresExecutor;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

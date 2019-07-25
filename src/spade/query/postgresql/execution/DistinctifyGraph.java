@@ -22,7 +22,7 @@ package spade.query.postgresql.execution;
 import spade.query.postgresql.entities.Graph;
 import spade.query.postgresql.kernel.Environment;
 import spade.query.postgresql.utility.TreeStringSerializable;
-import spade.storage.PostgresExecutor;
+import spade.storage.postgresql.PostgresExecutor;
 
 import java.util.ArrayList;
 

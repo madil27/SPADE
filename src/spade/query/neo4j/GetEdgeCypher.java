@@ -33,57 +33,57 @@ import static spade.storage.Neo4j.RelationshipTypes;
  */
 public class GetEdgeCypher extends Neo4j<Set<AbstractEdge>>
 {
-    @Override
-    public Set<AbstractEdge> execute(String argument_string)
-    {
-        Pattern argument_pattern = Pattern.compile(",");
-        String[] arguments = argument_pattern.split(argument_string);
-        String constraints = arguments[0].trim();
-        Map<String, List<String>> parameters = parseConstraints(constraints);
-        Integer limit = null;
-        if(arguments.length > 1)
-            limit = Integer.parseInt(arguments[1].trim());
+	@Override
+	public Set<AbstractEdge> execute(String argument_string)
+	{
+		Pattern argument_pattern = Pattern.compile(",");
+		String[] arguments = argument_pattern.split(argument_string);
+		String constraints = arguments[0].trim();
+		Map<String, List<String>> parameters = parseConstraints(constraints);
+		Integer limit = null;
+		if(arguments.length > 1)
+			limit = Integer.parseInt(arguments[1].trim());
 
-        return execute(parameters, limit);
-    }
+		return execute(parameters, limit);
+	}
 
-    @Override
-    public Set<AbstractEdge> execute(Map<String, List<String>> parameters, Integer limit)
-    {
-        Set<AbstractEdge> edgeSet = null;
-        try
-        {
-            StringBuilder query = new StringBuilder(100);
-            query.append("MATCH (").append(EDGE_ALIAS).append(":").append(RelationshipTypes.EDGE).append(")");
-            query.append(" WHERE ");
-            for (Map.Entry<String, List<String>> entry : parameters.entrySet())
-            {
-                String colName = entry.getKey();
-                List<String> values = entry.getValue();
-                query.append(EDGE_ALIAS).append(".");
-                query.append(colName);
-                query.append(values.get(COMPARISON_OPERATOR));
-                query.append("'");
-                query.append(values.get(COL_VALUE));
-                query.append("'");
-                query.append(" ");
-                String boolOperator = values.get(BOOLEAN_OPERATOR);
-                if (boolOperator != null)
-                    query.append(boolOperator);
-            }
-            if (limit != null)
-                query.append(" LIMIT ").append(limit);
-            query.append("RETURN ").append(EDGE_ALIAS).append(")");
+	@Override
+	public Set<AbstractEdge> execute(Map<String, List<String>> parameters, Integer limit)
+	{
+		Set<AbstractEdge> edgeSet = null;
+		try
+		{
+			StringBuilder query = new StringBuilder(100);
+			query.append("MATCH (").append(EDGE_ALIAS).append(":").append(RelationshipTypes.EDGE).append(")");
+			query.append(" WHERE ");
+			for(Map.Entry<String, List<String>> entry : parameters.entrySet())
+			{
+				String colName = entry.getKey();
+				List<String> values = entry.getValue();
+				query.append(EDGE_ALIAS).append(".");
+				query.append(colName);
+				query.append(values.get(COMPARISON_OPERATOR));
+				query.append("'");
+				query.append(values.get(COL_VALUE));
+				query.append("'");
+				query.append(" ");
+				String boolOperator = values.get(BOOLEAN_OPERATOR);
+				if(boolOperator != null)
+					query.append(boolOperator);
+			}
+			if(limit != null)
+				query.append(" LIMIT ").append(limit);
+			query.append("RETURN ").append(EDGE_ALIAS).append(")");
 
-            edgeSet = prepareEdgeSetFromNeo4jResult(query.toString());
-            if (!CollectionUtils.isEmpty(edgeSet))
-                return edgeSet;
-        }
-        catch (Exception ex)
-        {
-            Logger.getLogger(GetVertexCypher.class.getName()).log(Level.SEVERE, "Error creating vertex set!", ex);
-        }
+			edgeSet = prepareEdgeSetFromNeo4jResult(query.toString());
+			if(!CollectionUtils.isEmpty(edgeSet))
+				return edgeSet;
+		}
+		catch(Exception ex)
+		{
+			Logger.getLogger(GetVertexCypher.class.getName()).log(Level.SEVERE, "Error creating vertex set!", ex);
+		}
 
-        return edgeSet;
-    }
+		return edgeSet;
+	}
 }

@@ -36,8 +36,6 @@ import spade.core.AbstractQuery;
 import spade.core.AbstractStorage;
 import spade.core.Kernel;
 import spade.query.postgresql.QuickGrailExecutor;
-import spade.query.postgresql.kernel.Environment;
-import spade.storage.PostgresExecutor;
 
 import static spade.core.AbstractQuery.getCurrentStorage;
 
@@ -116,6 +114,10 @@ public class CommandLine extends AbstractAnalyzer
         {
             super(socket);
             this.executor = new QuickGrailExecutor();
+            if(getCurrentStorage() != null)
+            {
+                this.executor.createEnvironment();
+            }
         }
 
         @Override

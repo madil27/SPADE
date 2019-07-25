@@ -33,117 +33,116 @@ import java.util.Set;
  */
 public abstract class Scaffold
 {
-    protected static final String PARENTS = "parents";
-    protected static final String CHILDREN = "children";
-    protected String directoryPath;
+	protected static final String PARENTS = "parents";
+	protected static final String CHILDREN = "children";
+	public static int GLOBAL_TX_SIZE = 1000;
+	protected static int globalTxCount = 0;
+	protected String directoryPath;
+	protected int MAX_WAIT_TIME_BEFORE_FLUSH = 15000; // ms
+	protected Date lastFlushTime;
 
-    public static int GLOBAL_TX_SIZE = 1000;
-    protected static int globalTxCount = 0;
-    protected int MAX_WAIT_TIME_BEFORE_FLUSH = 15000; // ms
-    protected Date lastFlushTime;
+	public static void main(String args[])
+	{
+		// testing code
+		Scaffold scaffold = new BerkeleyDB();
+		scaffold.initialize("");
 
-    public void setGLOBAL_TX_SIZE(int globalTxSize)
-    {
-        GLOBAL_TX_SIZE = globalTxSize;
-    }
+		AbstractVertex v1 = new Vertex();
+		v1.addAnnotation("name", "v1");
 
-    /**
-     * This method is invoked by the kernel to initialize the storage.
-     *
-     * @param arguments The directory path of the scaffold storage.
-     * @return True if the storage was initialized successfully.
-     */
-    public abstract boolean initialize(String arguments);
+		AbstractVertex v2 = new Vertex();
+		v2.addAnnotation("name", "v2");
 
-    protected abstract void globalTxCheckin(boolean forcedFlush);
+		AbstractVertex v3 = new Vertex();
+		v3.addAnnotation("name", "v3");
 
-    /**
-     * This method is invoked by the AbstractStorage to shut down the storage.
-     *
-     * @return True if scaffold was shut down successfully.
-     */
-    public abstract boolean shutdown();
+		AbstractVertex v4 = new Vertex();
+		v4.addAnnotation("name", "v4");
 
-    public abstract Set<String> getChildren(String parentHash);
+		AbstractEdge e1 = new Edge(v1, v2);
+		e1.addAnnotation("name", "e1");
 
-    public abstract Set<String> getParents(String childHash);
+		AbstractEdge e2 = new Edge(v2, v3);
+		e2.addAnnotation("name", "e2");
 
-    public abstract Set<String> getNeighbors(String hash);
+		AbstractEdge e3 = new Edge(v1, v3);
+		e3.addAnnotation("name", "e3");
 
-    public abstract Map<String, Set<String>> getLineage(String hash, String direction, int maxDepth);
+		AbstractEdge e4 = new Edge(v2, v4);
+		v4.addAnnotation("name", "e4");
 
-    public abstract Map<String, Set<String>> getPaths(String source_hash, String destination_hash, int maxLength);
+		AbstractEdge e5 = new Edge(v1, v4);
+		e5.addAnnotation("name", "e5");
 
-    /**
-     * This function inserts hashes of the end vertices of given edge
-     * into the scaffold storage.
-     *
-     * @param incomingEdge edge whose end points to insert into the storage
-     * @return returns true if the insertion is successful. Insertion is considered
-     * not successful if the vertex is already present in the storage.
-     */
-    public abstract boolean insertEntry(AbstractEdge incomingEdge);
+		AbstractEdge e6 = new Edge(v3, v2);
+		e6.addAnnotation("name", "e6");
 
-    public abstract Graph queryManager(Map<String, List<String>> params);
+		AbstractEdge e7 = new Edge(v3, v4);
+		e7.addAnnotation("name", "e7");
 
-    public static void main(String args[])
-    {
-        // testing code
-        Scaffold scaffold = new BerkeleyDB();
-        scaffold.initialize("");
+		AbstractEdge e8 = new Edge(v4, v2);
+		e8.addAnnotation("name", "e8");
 
-        AbstractVertex v1 = new Vertex();
-        v1.addAnnotation("name", "v1");
+		scaffold.insertEntry(e1);
+		scaffold.insertEntry(e2);
+		scaffold.insertEntry(e3);
+		scaffold.insertEntry(e4);
+		scaffold.insertEntry(e5);
+		scaffold.insertEntry(e6);
+		scaffold.insertEntry(e7);
+		scaffold.insertEntry(e8);
 
-        AbstractVertex v2 = new Vertex();
-        v2.addAnnotation("name", "v2");
+		System.out.println("v1: " + v1.bigHashCode());
+		System.out.println("v2: " + v2.bigHashCode());
+		System.out.println("v3: " + v3.bigHashCode());
+		System.out.println("v4: " + v4.bigHashCode());
 
-        AbstractVertex v3 = new Vertex();
-        v3.addAnnotation("name", "v3");
+		System.out.println(scaffold.getPaths(v1.bigHashCode(), v2.bigHashCode(), 1));
+	}
 
-        AbstractVertex v4 = new Vertex();
-        v4.addAnnotation("name", "v4");
+	public void setGLOBAL_TX_SIZE(int globalTxSize)
+	{
+		GLOBAL_TX_SIZE = globalTxSize;
+	}
 
-        AbstractEdge e1 = new Edge(v1, v2);
-        e1.addAnnotation("name", "e1");
+	/**
+	 * This method is invoked by the kernel to initialize the storage.
+	 *
+	 * @param arguments The directory path of the scaffold storage.
+	 * @return True if the storage was initialized successfully.
+	 */
+	public abstract boolean initialize(String arguments);
 
-        AbstractEdge e2 = new Edge(v2, v3);
-        e2.addAnnotation("name", "e2");
+	protected abstract void globalTxCheckin(boolean forcedFlush);
 
-        AbstractEdge e3 = new Edge(v1, v3);
-        e3.addAnnotation("name", "e3");
+	/**
+	 * This method is invoked by the AbstractStorage to shut down the storage.
+	 *
+	 * @return True if scaffold was shut down successfully.
+	 */
+	public abstract boolean shutdown();
 
-        AbstractEdge e4 = new Edge(v2, v4);
-        v4.addAnnotation("name", "e4");
+	public abstract Set<String> getChildren(String parentHash);
 
-        AbstractEdge e5 = new Edge(v1, v4);
-        e5.addAnnotation("name", "e5");
+	public abstract Set<String> getParents(String childHash);
 
-        AbstractEdge e6 = new Edge(v3, v2);
-        e6.addAnnotation("name", "e6");
+	public abstract Set<String> getNeighbors(String hash);
 
-        AbstractEdge e7 = new Edge(v3, v4);
-        e7.addAnnotation("name", "e7");
+	public abstract Map<String, Set<String>> getLineage(String hash, String direction, int maxDepth);
 
-        AbstractEdge e8 = new Edge(v4, v2);
-        e8.addAnnotation("name", "e8");
+	public abstract Map<String, Set<String>> getPaths(String source_hash, String destination_hash, int maxLength);
 
-        scaffold.insertEntry(e1);
-        scaffold.insertEntry(e2);
-        scaffold.insertEntry(e3);
-        scaffold.insertEntry(e4);
-        scaffold.insertEntry(e5);
-        scaffold.insertEntry(e6);
-        scaffold.insertEntry(e7);
-        scaffold.insertEntry(e8);
+	/**
+	 * This function inserts hashes of the end vertices of given edge
+	 * into the scaffold storage.
+	 *
+	 * @param incomingEdge edge whose end points to insert into the storage
+	 * @return returns true if the insertion is successful. Insertion is considered
+	 * not successful if the vertex is already present in the storage.
+	 */
+	public abstract boolean insertEntry(AbstractEdge incomingEdge);
 
-        System.out.println("v1: " + v1.bigHashCode());
-        System.out.println("v2: " + v2.bigHashCode());
-        System.out.println("v3: " + v3.bigHashCode());
-        System.out.println("v4: " + v4.bigHashCode());
-
-        System.out.println(scaffold.getPaths(v1.bigHashCode(), v2.bigHashCode(), 1));
-    }
+	public abstract Graph queryManager(Map<String, List<String>> params);
 }
 
 

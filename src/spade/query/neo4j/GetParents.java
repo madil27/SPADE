@@ -32,40 +32,40 @@ import static spade.core.AbstractStorage.PRIMARY_KEY;
  */
 public class GetParents extends Neo4j<Graph>
 {
-    private static final Logger logger = Logger.getLogger(GetParents.class.getName());
+	private static final Logger logger = Logger.getLogger(GetParents.class.getName());
 
-    @Override
-    public Graph execute(String argument_string)
-    {
-        Pattern argument_pattern = Pattern.compile(",");
-        String[] arguments = argument_pattern.split(argument_string);
-        String constraints = arguments[0].trim();
-        Map<String, List<String>> parameters = parseConstraints(constraints);
-        Integer limit = null;
-        if(arguments.length > 1)
-            limit = Integer.parseInt(arguments[1].trim());
+	@Override
+	public Graph execute(String argument_string)
+	{
+		Pattern argument_pattern = Pattern.compile(",");
+		String[] arguments = argument_pattern.split(argument_string);
+		String constraints = arguments[0].trim();
+		Map<String, List<String>> parameters = parseConstraints(constraints);
+		Integer limit = null;
+		if(arguments.length > 1)
+			limit = Integer.parseInt(arguments[1].trim());
 
-        return execute(parameters, limit);
-    }
+		return execute(parameters, limit);
+	}
 
-    @Override
-    public Graph execute(Map<String, List<String>> parameters, Integer limit)
-    {
-        try
-        {
-            String query = PRIMARY_KEY;
-            List<String> values = parameters.get(CHILD_VERTEX_KEY);
-            query += ":" ;
-            query += values.get(COL_VALUE);
+	@Override
+	public Graph execute(Map<String, List<String>> parameters, Integer limit)
+	{
+		try
+		{
+			String query = PRIMARY_KEY;
+			List<String> values = parameters.get(CHILD_VERTEX_KEY);
+			query += ":";
+			query += values.get(COL_VALUE);
 
-            spade.storage.Neo4j neo4jStorage = (spade.storage.Neo4j) currentStorage;
-            Graph parents = neo4jStorage.getParents(query);
-            return parents;
-        }
-        catch (Exception ex)
-        {
-            logger.log(Level.SEVERE, "Error retrieving parents!", ex);
-            return null;
-        }
-    }
+			spade.storage.Neo4j neo4jStorage = (spade.storage.Neo4j) currentStorage;
+			Graph parents = neo4jStorage.getParents(query);
+			return parents;
+		}
+		catch(Exception ex)
+		{
+			logger.log(Level.SEVERE, "Error retrieving parents!", ex);
+			return null;
+		}
+	}
 }

@@ -21,7 +21,7 @@ package spade.query.postgresql.utility;
 
 import spade.query.postgresql.entities.Graph;
 import spade.query.postgresql.entities.GraphMetadata;
-import spade.storage.PostgresExecutor;
+import spade.storage.postgresql.PostgresExecutor;
 
 import java.util.ArrayList;
 import java.util.Arrays;

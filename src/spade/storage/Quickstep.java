@@ -41,7 +41,7 @@ import spade.core.AbstractStorage;
 import spade.core.AbstractVertex;
 import spade.core.Graph;
 import spade.core.Settings;
-import spade.query.quickgrail.utility.QuickstepUtil;
+import spade.query.quickstep.utility.QuickstepUtil;
 import spade.storage.quickstep.GraphBatch;
 import spade.storage.quickstep.QuickstepClient;
 import spade.storage.quickstep.QuickstepConfiguration;

@@ -34,42 +34,42 @@ import static spade.storage.Neo4j.convertNodeToVertex;
  */
 public class GetParentsCypher extends Neo4j<Graph>
 {
-    @Override
-    public Graph execute(String argument_string)
-    {
-        Pattern argument_pattern = Pattern.compile(",");
-        String[] arguments = argument_pattern.split(argument_string);
-        String constraints = arguments[0].trim();
-        Map<String, List<String>> parameters = parseConstraints(constraints);
-        Integer limit = null;
-        if(arguments.length > 1)
-            limit = Integer.parseInt(arguments[1].trim());
+	@Override
+	public Graph execute(String argument_string)
+	{
+		Pattern argument_pattern = Pattern.compile(",");
+		String[] arguments = argument_pattern.split(argument_string);
+		String constraints = arguments[0].trim();
+		Map<String, List<String>> parameters = parseConstraints(constraints);
+		Integer limit = null;
+		if(arguments.length > 1)
+			limit = Integer.parseInt(arguments[1].trim());
 
-        return execute(parameters, limit);
-    }
+		return execute(parameters, limit);
+	}
 
-    @Override
-    public Graph execute(Map<String, List<String>> parameters, Integer limit)
-    {
-        String vertexQuery = prepareGetVertexQuery(parameters, limit);
-        Result result = (Result) currentStorage.executeQuery(vertexQuery);
-        Iterator<Node> nodeSet = result.columnAs(VERTEX_ALIAS);
-        Node node;
-        if(nodeSet.hasNext())
-        {
-            // starting point can only be one vertex
-            node = nodeSet.next();
-        }
-        else
-            return null;
-        Iterable<Relationship> relationships = node.getRelationships(Direction.OUTGOING);
-        Graph parents = new Graph();
-        for(Relationship relationship: relationships)
-        {
-            parents.putVertex(convertNodeToVertex(relationship.getEndNode()));
-        }
+	@Override
+	public Graph execute(Map<String, List<String>> parameters, Integer limit)
+	{
+		String vertexQuery = prepareGetVertexQuery(parameters, limit);
+		Result result = (Result) currentStorage.executeQuery(vertexQuery);
+		Iterator<Node> nodeSet = result.columnAs(VERTEX_ALIAS);
+		Node node;
+		if(nodeSet.hasNext())
+		{
+			// starting point can only be one vertex
+			node = nodeSet.next();
+		}
+		else
+			return null;
+		Iterable<Relationship> relationships = node.getRelationships(Direction.OUTGOING);
+		Graph parents = new Graph();
+		for(Relationship relationship : relationships)
+		{
+			parents.putVertex(convertNodeToVertex(relationship.getEndNode()));
+		}
 
 
-        return parents;
-    }
+		return parents;
+	}
 }

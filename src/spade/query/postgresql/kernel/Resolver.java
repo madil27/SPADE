@@ -541,9 +541,6 @@ public class Resolver
 			case "getVertex":
 				return resolveGetVertexOrEdge(Graph.Component.kVertex, subject, arguments, ToGraph(outputEntity));
 			case "getEdge":
-				//TODO: update code so getedge gets vertices as well
-				return resolveGetVertexOrEdge(Graph.Component.kEdge, subject, arguments, ToGraph(outputEntity));
-			case "getEdgeWithEndpoints":
 			{
 				Graph edges = resolveGetVertexOrEdge(Graph.Component.kEdge, subject, arguments, ToGraph(outputEntity));
 				Graph outputGraph = (Graph) outputEntity;
@@ -551,8 +548,8 @@ public class Resolver
 				{
 					outputGraph = allocateEmptyGraph();
 				}
-				instructions.add(new UnionGraph(outputGraph, edges));
 				instructions.add(new GetEdgeEndpoint(outputGraph, edges, GetEdgeEndpoint.Component.kBoth));
+				instructions.add(new UnionGraph(outputGraph, edges));
 				return outputGraph;
 			}
 			case "getLineage":

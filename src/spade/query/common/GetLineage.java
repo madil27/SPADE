@@ -52,171 +52,171 @@ import static spade.core.AbstractStorage.scaffold;
  */
 public class GetLineage extends AbstractQuery<Graph>
 {
-    private AbstractQuery getVertex = null;
-    private AbstractQuery getEdge = null;
-    private AbstractQuery getChildren = null;
-    private AbstractQuery getParents = null;
-    private static final Logger logger = Logger.getLogger(GetLineage.class.getName());
+	private static final Logger logger = Logger.getLogger(GetLineage.class.getName());
+	private AbstractQuery getVertex = null;
+	private AbstractQuery getEdge = null;
+	private AbstractQuery getChildren = null;
+	private AbstractQuery getParents = null;
 
-    public GetLineage()
-    {
-        register();
-    }
+	public GetLineage()
+	{
+		register();
+	}
 
-    @Override
-    public Graph execute(String argument_string)
-    {
-        Pattern argument_pattern = Pattern.compile(",");
-        String[] arguments = argument_pattern.split(argument_string);
-        String constraints = arguments[0].trim();
-        Map<String, List<String>> parameters = parseConstraints(constraints);
-        int maxDepth = Integer.parseInt(arguments[1].trim());
-        String direction = arguments[2].trim();
+	@Override
+	public Graph execute(String argument_string)
+	{
+		Pattern argument_pattern = Pattern.compile(",");
+		String[] arguments = argument_pattern.split(argument_string);
+		String constraints = arguments[0].trim();
+		Map<String, List<String>> parameters = parseConstraints(constraints);
+		int maxDepth = Integer.parseInt(arguments[1].trim());
+		String direction = arguments[2].trim();
 
-        Graph result = new Graph();
-        if(USE_SCAFFOLD && BUILD_SCAFFOLD)
-        {
-            result = scaffold.queryManager(parameters);
-            return result;
-        }
+		Graph result = new Graph();
+		if(USE_SCAFFOLD && BUILD_SCAFFOLD)
+		{
+			result = scaffold.queryManager(parameters);
+			return result;
+		}
 
-        try
-        {
-            String storage = currentStorage.getClass().getSimpleName().toLowerCase();
-            String class_prefix = "spade.query." + storage;
-            result.setMaxDepth(maxDepth);
+		try
+		{
+			String storage = currentStorage.getClass().getSimpleName().toLowerCase();
+			String class_prefix = "spade.query." + storage;
+			result.setMaxDepth(maxDepth);
 
-            getVertex = (AbstractQuery) Class.forName(class_prefix + ".GetVertex").newInstance();
-            getEdge = (AbstractQuery) Class.forName(class_prefix + ".GetEdge").newInstance();
-            getChildren = (AbstractQuery) Class.forName(class_prefix + ".GetChildren").newInstance();
-            getParents = (AbstractQuery) Class.forName(class_prefix + ".GetParents").newInstance();
+			getVertex = (AbstractQuery) Class.forName(class_prefix + ".GetVertex").newInstance();
+			getEdge = (AbstractQuery) Class.forName(class_prefix + ".GetEdge").newInstance();
+			getChildren = (AbstractQuery) Class.forName(class_prefix + ".GetChildren").newInstance();
+			getParents = (AbstractQuery) Class.forName(class_prefix + ".GetParents").newInstance();
 
-            if(DIRECTION_ANCESTORS.startsWith(direction.toLowerCase()) ||
-                    DIRECTION_DESCENDANTS.startsWith(direction.toLowerCase()))
-            {
-                result = execute(parameters, direction, maxDepth);
-            }
-            else if(DIRECTION_BOTH.startsWith(direction.toLowerCase()))
-            {
-                direction = DIRECTION_ANCESTORS;
-                result = execute(parameters, direction, maxDepth);
-                direction = DIRECTION_DESCENDANTS;
-                result = Graph.union(result, execute(parameters, direction, maxDepth));
-            }
-            else
-            {
-                result = null;
-            }
+			if(DIRECTION_ANCESTORS.startsWith(direction.toLowerCase()) ||
+					DIRECTION_DESCENDANTS.startsWith(direction.toLowerCase()))
+			{
+				result = execute(parameters, direction, maxDepth);
+			}
+			else if(DIRECTION_BOTH.startsWith(direction.toLowerCase()))
+			{
+				direction = DIRECTION_ANCESTORS;
+				result = execute(parameters, direction, maxDepth);
+				direction = DIRECTION_DESCENDANTS;
+				result = Graph.union(result, execute(parameters, direction, maxDepth));
+			}
+			else
+			{
+				result = null;
+			}
 
-            return result;
-        }
-        catch(Exception ex)
-        {
-            logger.log(Level.SEVERE, "Error executing GetLineage setup!", ex);
-            return null;
-        }
-    }
+			return result;
+		}
+		catch(Exception ex)
+		{
+			logger.log(Level.SEVERE, "Error executing GetLineage setup!", ex);
+			return null;
+		}
+	}
 
-    @Override
-    public Graph execute(Map<String, List<String>> parameters, Integer limit)
-    {
-        return null;
-    }
+	@Override
+	public Graph execute(Map<String, List<String>> parameters, Integer limit)
+	{
+		return null;
+	}
 
-    Graph execute(Map<String, List<String>> parameters, String direction, int maxDepth)
-    {
-        Graph result = new Graph();
-        try
-        {
-            Map<String, List<String>> vertexParams = new HashMap<>(parameters);
-            vertexParams.remove(DIRECTION);
-            vertexParams.remove(MAX_DEPTH);
-            int current_depth = 0;
-            Integer limit = null;
-            Set<String> remainingVertices = new HashSet<>();
-            Set<String> visitedVertices = new HashSet<>();
-            Set<AbstractVertex> startingVertexSet = (Set<AbstractVertex>) getVertex.execute(vertexParams, limit);
-            if(!CollectionUtils.isEmpty(startingVertexSet))
-            {
-                AbstractVertex startingVertex = startingVertexSet.iterator().next();
-                startingVertex.setDepth(current_depth);
+	Graph execute(Map<String, List<String>> parameters, String direction, int maxDepth)
+	{
+		Graph result = new Graph();
+		try
+		{
+			Map<String, List<String>> vertexParams = new HashMap<>(parameters);
+			vertexParams.remove(DIRECTION);
+			vertexParams.remove(MAX_DEPTH);
+			int current_depth = 0;
+			Integer limit = null;
+			Set<String> remainingVertices = new HashSet<>();
+			Set<String> visitedVertices = new HashSet<>();
+			Set<AbstractVertex> startingVertexSet = (Set<AbstractVertex>) getVertex.execute(vertexParams, limit);
+			if(!CollectionUtils.isEmpty(startingVertexSet))
+			{
+				AbstractVertex startingVertex = startingVertexSet.iterator().next();
+				startingVertex.setDepth(current_depth);
 //                for(AbstractVertex vertex: startingVertexSet)
 //                {
 //                    remainingVertices.add(vertex.bigHashCode());
 //                }
-                remainingVertices.add(startingVertex.bigHashCode());
+				remainingVertices.add(startingVertex.bigHashCode());
 //                remainingVertices.add(startingVertex.getAnnotation(PRIMARY_KEY));
-                result.putVertex(startingVertex);
-                result.setRootVertex(startingVertex);
-            }
-            else
-            {
-                return null;
-            }
+				result.putVertex(startingVertex);
+				result.setRootVertex(startingVertex);
+			}
+			else
+			{
+				return null;
+			}
 
-            while(!remainingVertices.isEmpty() && current_depth < maxDepth)
-            {
-                current_depth++;
-                visitedVertices.addAll(remainingVertices);
-                Set<String> currentSet = new HashSet<>();
-                for(String vertexHash: remainingVertices)
-                {
-                    Graph neighbors;
-                    Map<String, List<String>> params = new HashMap<>();
-                    if(DIRECTION_ANCESTORS.startsWith(direction.toLowerCase()))
-                    {
-                        params.put(CHILD_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, vertexHash, null));
-                        neighbors = (Graph) getParents.execute(params, limit);
-                    }
-                    else
-                    {
-                        params.put(PARENT_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, vertexHash, null));
-                        neighbors = (Graph) getChildren.execute(params, limit);
-                    }
-                    result.vertexSet().addAll(neighbors.vertexSet());
-                    // empty right now. TODO: make getParents and getChildren return edges too
-                    result.edgeSet().addAll(neighbors.edgeSet());
-                    for(AbstractVertex vertex : neighbors.vertexSet())
-                    {
-                        // for discrepancy check
-                        vertex.setDepth(current_depth+1);
-                        String neighborHash = vertex.bigHashCode();
+			while(!remainingVertices.isEmpty() && current_depth < maxDepth)
+			{
+				current_depth++;
+				visitedVertices.addAll(remainingVertices);
+				Set<String> currentSet = new HashSet<>();
+				for(String vertexHash : remainingVertices)
+				{
+					Graph neighbors;
+					Map<String, List<String>> params = new HashMap<>();
+					if(DIRECTION_ANCESTORS.startsWith(direction.toLowerCase()))
+					{
+						params.put(CHILD_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, vertexHash, null));
+						neighbors = (Graph) getParents.execute(params, limit);
+					}
+					else
+					{
+						params.put(PARENT_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, vertexHash, null));
+						neighbors = (Graph) getChildren.execute(params, limit);
+					}
+					result.vertexSet().addAll(neighbors.vertexSet());
+					// empty right now. TODO: make getParents and getChildren return edges too
+					result.edgeSet().addAll(neighbors.edgeSet());
+					for(AbstractVertex vertex : neighbors.vertexSet())
+					{
+						// for discrepancy check
+						vertex.setDepth(current_depth + 1);
+						String neighborHash = vertex.bigHashCode();
 //                        String neighborHash = vertex.getAnnotation(PRIMARY_KEY);
-                        if(!visitedVertices.contains(neighborHash))
-                        {
-                            currentSet.add(neighborHash);
-                        }
-                        if(vertex.isCompleteNetworkVertex())
-                        {
-                            setRemoteResolutionRequired();
-                            result.putNetworkVertex(vertex, current_depth);
-                        }
-                        Map<String, List<String>> edgeParams = new LinkedHashMap<>();
-                        if(DIRECTION_ANCESTORS.startsWith(direction.toLowerCase()))
-                        {
-                            edgeParams.put(CHILD_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, vertexHash, "AND"));
-                            edgeParams.put(PARENT_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, neighborHash, null));
-                        }
-                        else
-                        {
-                            edgeParams.put(PARENT_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, vertexHash, "AND"));
-                            edgeParams.put(CHILD_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, neighborHash, null));
-                        }
-                        Set<AbstractEdge> edgeSet = (Set<AbstractEdge>) getEdge.execute(edgeParams, limit);
-                        result.edgeSet().addAll(edgeSet);
-                    }
-                }
-                remainingVertices.clear();
-                remainingVertices.addAll(currentSet);
-            }
-            result.setComputeTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z").format(new Date()));
+						if(!visitedVertices.contains(neighborHash))
+						{
+							currentSet.add(neighborHash);
+						}
+						if(vertex.isCompleteNetworkVertex())
+						{
+							setRemoteResolutionRequired();
+							result.putNetworkVertex(vertex, current_depth);
+						}
+						Map<String, List<String>> edgeParams = new LinkedHashMap<>();
+						if(DIRECTION_ANCESTORS.startsWith(direction.toLowerCase()))
+						{
+							edgeParams.put(CHILD_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, vertexHash, "AND"));
+							edgeParams.put(PARENT_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, neighborHash, null));
+						}
+						else
+						{
+							edgeParams.put(PARENT_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, vertexHash, "AND"));
+							edgeParams.put(CHILD_VERTEX_KEY, Arrays.asList(OPERATORS.EQUALS, neighborHash, null));
+						}
+						Set<AbstractEdge> edgeSet = (Set<AbstractEdge>) getEdge.execute(edgeParams, limit);
+						result.edgeSet().addAll(edgeSet);
+					}
+				}
+				remainingVertices.clear();
+				remainingVertices.addAll(currentSet);
+			}
+			result.setComputeTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z").format(new Date()));
 
-            return result;
-        }
-        catch(Exception ex)
-        {
-            logger.log(Level.SEVERE, "Error executing GetLineage!", ex);
-            return null;
-        }
-    }
+			return result;
+		}
+		catch(Exception ex)
+		{
+			logger.log(Level.SEVERE, "Error executing GetLineage!", ex);
+			return null;
+		}
+	}
 }

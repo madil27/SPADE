@@ -33,35 +33,35 @@ import static spade.core.AbstractStorage.PRIMARY_KEY;
  */
 public class GetPaths extends AbstractQuery<Graph>
 {
-    public GetPaths()
-    {
-        register();
-    }
+	public GetPaths()
+	{
+		register();
+	}
 
-    @Override
-    public Graph execute(String argument_string)
-    {
-        Pattern argument_pattern = Pattern.compile(",");
-        String[] arguments = argument_pattern.split(argument_string);
-        String constraints = arguments[0].trim();
-        int maxLength = Integer.parseInt(arguments[1].trim());
-        String direction = arguments[2].trim();
-        Map<String, List<String>> parameters = parseConstraints(constraints);
-        // assumption that 'sourceVertexHash' and 'destinationVertexHash' keys are present
-        GetLineage getLineage = new GetLineage();
-        parameters.put(PRIMARY_KEY, parameters.get("sourceVertexHash"));
-        parameters.put("direction", Collections.singletonList(DIRECTION_ANCESTORS));
-        Graph ancestorLineage = getLineage.execute(parameters, direction, maxLength);
-        parameters.put("direction", Collections.singletonList(DIRECTION_DESCENDANTS));
-        parameters.put(PRIMARY_KEY, parameters.get("destinationVertexHash"));
-        Graph descendantLineage = getLineage.execute(parameters, direction, maxLength);
+	@Override
+	public Graph execute(String argument_string)
+	{
+		Pattern argument_pattern = Pattern.compile(",");
+		String[] arguments = argument_pattern.split(argument_string);
+		String constraints = arguments[0].trim();
+		int maxLength = Integer.parseInt(arguments[1].trim());
+		String direction = arguments[2].trim();
+		Map<String, List<String>> parameters = parseConstraints(constraints);
+		// assumption that 'sourceVertexHash' and 'destinationVertexHash' keys are present
+		GetLineage getLineage = new GetLineage();
+		parameters.put(PRIMARY_KEY, parameters.get("sourceVertexHash"));
+		parameters.put("direction", Collections.singletonList(DIRECTION_ANCESTORS));
+		Graph ancestorLineage = getLineage.execute(parameters, direction, maxLength);
+		parameters.put("direction", Collections.singletonList(DIRECTION_DESCENDANTS));
+		parameters.put(PRIMARY_KEY, parameters.get("destinationVertexHash"));
+		Graph descendantLineage = getLineage.execute(parameters, direction, maxLength);
 
-        return Graph.union(ancestorLineage, descendantLineage);
-    }
+		return Graph.union(ancestorLineage, descendantLineage);
+	}
 
-    @Override
-    public Graph execute(Map<String, List<String>> parameters, Integer limit)
-    {
-        return null;
-    }
+	@Override
+	public Graph execute(Map<String, List<String>> parameters, Integer limit)
+	{
+		return null;
+	}
 }

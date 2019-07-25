@@ -256,7 +256,7 @@ public class PostgreSQL extends SQL
             }
             catch(SQLException ex)
             {
-                logger.log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, "Error committing to the database", ex);
             }
         }
         else
@@ -286,7 +286,7 @@ public class PostgreSQL extends SQL
         }
         catch (Exception ex)
         {
-            logger.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, "Error shutting down Postgres", ex);
             return false;
         }
         return true;
@@ -472,9 +472,9 @@ public class PostgreSQL extends SQL
                 insertScaffoldEntry(incomingEdge);
             }
         }
-        catch (Exception e)
+        catch(Exception ex)
         {
-            logger.log(Level.SEVERE, null, e);
+            logger.log(Level.SEVERE, "Error executing statement", ex);
         }
 
         if(reportingEnabled)
@@ -592,7 +592,7 @@ public class PostgreSQL extends SQL
                 }
                 catch(Exception ex)
                 {
-                    logger.log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, "Error executing bulk statements!", ex);
                 }
             }
         }
@@ -693,7 +693,7 @@ public class PostgreSQL extends SQL
                 }
                 catch(Exception ex)
                 {
-                    logger.log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, "Error executing bulk statements!", ex);
                 }
             }
         }
@@ -789,7 +789,7 @@ public class PostgreSQL extends SQL
         }
         catch (Exception e)
         {
-            logger.log(Level.SEVERE, null, e);
+            logger.log(Level.SEVERE, "Error executing insertion statements!", e);
             return false;
         }
 
@@ -848,7 +848,6 @@ public class PostgreSQL extends SQL
                 result = result.replaceAll("[^\\x00-\\x7F]", "");
                 result = result.trim();
             }
-            logger.log(Level.INFO, "result: " + result);
             return result;
         }
         catch(Exception ex)
