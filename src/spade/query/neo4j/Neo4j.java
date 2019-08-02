@@ -40,6 +40,7 @@ import static spade.storage.Neo4j.convertRelationshipToEdge;
  */
 public abstract class Neo4j<R> extends AbstractQuery<R>
 {
+	private Logger logger = Logger.getLogger(Neo4j.class.getName());
 	// vertex alias to use while querying
 	protected static final String VERTEX_ALIAS = "v";
 	// edge alias to use while querying
@@ -49,41 +50,48 @@ public abstract class Neo4j<R> extends AbstractQuery<R>
 	{
 		StringBuilder query = new StringBuilder(100);
 		query.append("MATCH (").append(VERTEX_ALIAS).append(":").append(NodeTypes.VERTEX).append(")");
-		query.append(" WHERE ");
-		for(Map.Entry<String, List<String>> entry : parameters.entrySet())
+		if(parameters.size() > 0)
 		{
-			String colName = entry.getKey();
-			List<String> values = entry.getValue();
-			query.append(VERTEX_ALIAS).append(".");
-			query.append(colName);
-			query.append(values.get(COMPARISON_OPERATOR));
-			query.append("'");
-			query.append(values.get(COL_VALUE));
-			query.append("'");
-			query.append(" ");
-			String boolOperator = values.get(BOOLEAN_OPERATOR);
-			if(boolOperator != null)
-				query.append(boolOperator);
+			query.append(" WHERE ");
+			for(Map.Entry<String, List<String>> entry : parameters.entrySet())
+			{
+				String colName = entry.getKey();
+				List<String> values = entry.getValue();
+				query.append(VERTEX_ALIAS).append(".");
+				query.append(colName);
+				query.append(values.get(COMPARISON_OPERATOR));
+				query.append("'");
+				query.append(values.get(COL_VALUE));
+				query.append("'");
+				query.append(" ");
+				String boolOperator = values.get(BOOLEAN_OPERATOR);
+				if(boolOperator != null)
+					query.append(boolOperator);
+			}
 		}
+		query.append("RETURN ").append(VERTEX_ALIAS);
 		if(limit != null)
 			query.append(" LIMIT ").append(limit);
-		query.append("RETURN ").append(VERTEX_ALIAS).append(")");
-
 
 		return query.toString();
 	}
 
 	protected Set<AbstractVertex> prepareVertexSetFromNeo4jResult(String query)
 	{
+		logger.log(Level.INFO, "vertex query: " + query);
+		spade.storage.Neo4j currentStorage = (spade.storage.Neo4j) getCurrentStorage();
+		currentStorage.globalTxCheckin(true);
 		Set<AbstractVertex> vertexSet = new HashSet<>();
 		try
 		{
-			Result result = (Result) currentStorage.executeQuery(query);
+			Result result = currentStorage.executeQuery(query);
+			logger.log(Level.INFO, "vertex result: " + result);
 			Iterator<Node> nodeSet = result.columnAs(VERTEX_ALIAS);
 			AbstractVertex vertex;
 			while(nodeSet.hasNext())
 			{
 				vertex = convertNodeToVertex(nodeSet.next());
+				logger.log(Level.INFO, "vertex: " + vertex);
 				if(!vertex.isEmpty())
 					vertexSet.add(vertex);
 			}
@@ -92,21 +100,26 @@ public abstract class Neo4j<R> extends AbstractQuery<R>
 		{
 			Logger.getLogger(Neo4j.class.getName()).log(Level.SEVERE, "Vertex set querying unsuccessful!", ex);
 		}
-
+		currentStorage.globalTxCheckin(true);
 		return vertexSet;
 	}
 
 	protected Set<AbstractEdge> prepareEdgeSetFromNeo4jResult(String query)
 	{
+		logger.log(Level.INFO, "edge query: " + query);
 		Set<AbstractEdge> edgeSet = new HashSet<>();
+		spade.storage.Neo4j currentStorage = (spade.storage.Neo4j) getCurrentStorage();
+		currentStorage.globalTxCheckin(true);
 		try
 		{
 			Result result = (Result) currentStorage.executeQuery(query);
+			logger.log(Level.INFO, "edge result: " + result);
 			Iterator<Relationship> relationshipSet = result.columnAs(EDGE_ALIAS);
 			AbstractEdge edge;
 			while(relationshipSet.hasNext())
 			{
 				edge = convertRelationshipToEdge(relationshipSet.next());
+				logger.log(Level.INFO, "edge: " + edge);
 				if(!edge.isEmpty())
 					edgeSet.add(edge);
 			}
@@ -116,6 +129,7 @@ public abstract class Neo4j<R> extends AbstractQuery<R>
 			Logger.getLogger(Neo4j.class.getName()).log(Level.SEVERE, "Edge set querying unsuccessful!", ex);
 		}
 
+		currentStorage.globalTxCheckin(true);
 		return edgeSet;
 	}
 }

@@ -251,6 +251,14 @@ public abstract class AbstractEdge implements Serializable
                 "annotations=" + annotations +
                 ", childVertex=" + childVertex +
                 ", parentVertex=" + parentVertex +
-                '}';
-    }
+				"}";
+	}
+
+	public String prettyPrint()
+	{
+		return "\t\tEdge:\n\t\t{\n" +
+				"\t\t\thash:" + bigHashCode() + ",\n" +
+				"\t\t\tannotations:" + annotations + ",\n" +
+				"\t\t}";
+	}
 }

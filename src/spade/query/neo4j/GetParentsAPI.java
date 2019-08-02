@@ -16,25 +16,26 @@
  */
 package spade.query.neo4j;
 
-import org.apache.commons.collections.CollectionUtils;
-import spade.core.AbstractEdge;
+import spade.core.Graph;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import static spade.storage.Neo4j.RelationshipTypes;
+import static spade.core.AbstractStorage.CHILD_VERTEX_KEY;
+import static spade.core.AbstractStorage.PRIMARY_KEY;
 
 /**
  * @author raza
  */
-public class GetEdgeCypher extends Neo4j<Set<AbstractEdge>>
+public class GetParentsAPI extends Neo4j<Graph>
 {
+	private static final Logger logger = Logger.getLogger(GetParentsAPI.class.getName());
+
 	@Override
-	public Set<AbstractEdge> execute(String argument_string)
+	public Graph execute(String argument_string)
 	{
 		Pattern argument_pattern = Pattern.compile(",");
 		String[] arguments = argument_pattern.split(argument_string);
@@ -48,42 +49,23 @@ public class GetEdgeCypher extends Neo4j<Set<AbstractEdge>>
 	}
 
 	@Override
-	public Set<AbstractEdge> execute(Map<String, List<String>> parameters, Integer limit)
+	public Graph execute(Map<String, List<String>> parameters, Integer limit)
 	{
-		Set<AbstractEdge> edgeSet = null;
 		try
 		{
-			StringBuilder query = new StringBuilder(100);
-			query.append("MATCH (").append(EDGE_ALIAS).append(":").append(RelationshipTypes.EDGE).append(")");
-			query.append(" WHERE ");
-			for(Map.Entry<String, List<String>> entry : parameters.entrySet())
-			{
-				String colName = entry.getKey();
-				List<String> values = entry.getValue();
-				query.append(EDGE_ALIAS).append(".");
-				query.append(colName);
-				query.append(values.get(COMPARISON_OPERATOR));
-				query.append("'");
-				query.append(values.get(COL_VALUE));
-				query.append("'");
-				query.append(" ");
-				String boolOperator = values.get(BOOLEAN_OPERATOR);
-				if(boolOperator != null)
-					query.append(boolOperator);
-			}
-			if(limit != null)
-				query.append(" LIMIT ").append(limit);
-			query.append("RETURN ").append(EDGE_ALIAS).append(")");
+			String query = PRIMARY_KEY;
+			List<String> values = parameters.get(CHILD_VERTEX_KEY);
+			query += ":";
+			query += values.get(COL_VALUE);
 
-			edgeSet = prepareEdgeSetFromNeo4jResult(query.toString());
-			if(!CollectionUtils.isEmpty(edgeSet))
-				return edgeSet;
+			spade.storage.Neo4j neo4jStorage = (spade.storage.Neo4j) currentStorage;
+			Graph parents = neo4jStorage.getParents(query);
+			return parents;
 		}
 		catch(Exception ex)
 		{
-			Logger.getLogger(GetVertexCypher.class.getName()).log(Level.SEVERE, "Error creating vertex set!", ex);
+			logger.log(Level.SEVERE, "Error retrieving parents!", ex);
+			return null;
 		}
-
-		return edgeSet;
 	}
 }

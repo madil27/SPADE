@@ -953,4 +953,36 @@ public class Graph extends AbstractStorage implements Serializable
                 ", edgeSet=" + edgeSet +
                 '}';
     }
+
+    private String prettyPrintVertices()
+    {
+        StringBuilder printStr = new StringBuilder(200);
+        for(AbstractVertex vertex : vertexSet)
+        {
+            printStr.append(vertex.prettyPrint());
+            printStr.append(",\n");
+        }
+        return printStr.substring(0, printStr.length() - 2);
+    }
+
+    private String prettyPrintEdges()
+    {
+        StringBuilder printStr = new StringBuilder(200);
+        for(AbstractEdge edge : edgeSet)
+        {
+            printStr.append(edge.prettyPrint());
+            printStr.append(",\n");
+        }
+        return printStr.substring(0, printStr.length() - 2);
+    }
+
+    // prints in a JSON like format
+    public String prettyPrint()
+    {
+        return "Graph:\n{\n" +
+                "\tvertexSet:\n\t{\n" + prettyPrintVertices() +
+                "\n\t},\n" +
+                "\tedgeSet:\n\t{\n" + prettyPrintEdges() +
+                "\n\t}\n}";
+    }
 }

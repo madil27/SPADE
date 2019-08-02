@@ -438,8 +438,9 @@ public class Neo4j extends AbstractStorage
     void globalTxCheckin() {
         globalTxCheckin(false);
     }
-    
-    void globalTxCheckin(boolean forcedFlush) {
+
+	public void globalTxCheckin(boolean forcedFlush)
+	{
   		if ((globalTxCount % GLOBAL_TX_SIZE == 0) || (forcedFlush == true)) {
             globalTxFinalize();
             globalTx = graphDb.beginTx();
@@ -598,6 +599,7 @@ public class Neo4j extends AbstractStorage
 
     public static AbstractVertex convertNodeToVertex(Node node)
     {
+		logger.log(Level.INFO, "node: " + node);
         AbstractVertex resultVertex = new Vertex();
         for (String key : node.getPropertyKeys())
         {
@@ -624,6 +626,7 @@ public class Neo4j extends AbstractStorage
 
     public static AbstractEdge convertRelationshipToEdge(Relationship relationship)
     {
+		logger.log(Level.INFO, "relationship: " + relationship);
         AbstractEdge resultEdge = new Edge(convertNodeToVertex(relationship.getStartNode()), convertNodeToVertex(relationship.getEndNode()));
         for (String key : relationship.getPropertyKeys())
         {
@@ -817,26 +820,23 @@ public class Neo4j extends AbstractStorage
     }
 
     @Override
-    public Object executeQuery(String query)
-    {
-        try ( Transaction tx = graphDb.beginTx() )
-        {
-            Result result = null;
+	public Result executeQuery(String query)
+	{
+		Result result = null;
+		try
+		{
             globalTxCheckin();
-            try
-            {
-                result = graphDb.execute(query);
-            }
-            catch(QueryExecutionException ex)
-            {
-                logger.log(Level.SEVERE, "Neo4j Cypher query execution not successful!", ex);
-            }
-            finally
-            {
-                tx.success();
-            }
-            return result;
-        }
+			result = graphDb.execute(query);
+		}
+		catch(QueryExecutionException ex)
+		{
+			logger.log(Level.SEVERE, "Neo4j Cypher query execution not successful!", ex);
+		}
+		finally
+		{
+			globalTxCheckin();
+		}
+		return result;
     }
 
     public Graph getPaths(int srcVertexId, int dstVertexId, int maxLength) {

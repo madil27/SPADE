@@ -888,7 +888,6 @@ public class Kernel
                         storage.edgeCount = 0;
                         storages.add(storage);
                         logger.log(Level.INFO, "Storage added: {0}", className + " " + arguments);
-                        logger.log(Level.INFO, "currentStorage set to "+ storage.getClass().getName());
                         outputStream.println("done");
                     }
                     else

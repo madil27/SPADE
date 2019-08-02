@@ -17,7 +17,8 @@
 package spade.query.neo4j;
 
 import org.apache.commons.collections.CollectionUtils;
-import spade.core.AbstractVertex;
+import spade.core.AbstractEdge;
+import spade.core.Graph;
 
 import java.util.List;
 import java.util.Map;
@@ -29,10 +30,12 @@ import java.util.regex.Pattern;
 /**
  * @author raza
  */
-public class GetVertexCypher extends Neo4j<Set<AbstractVertex>>
+public class GetEdgeAPI extends Neo4j<Set<AbstractEdge>>
 {
+	private static final Logger logger = Logger.getLogger(GetEdgeAPI.class.getName());
+
 	@Override
-	public Set<AbstractVertex> execute(String argument_string)
+	public Set<AbstractEdge> execute(String argument_string)
 	{
 		Pattern argument_pattern = Pattern.compile(",");
 		String[] arguments = argument_pattern.split(argument_string);
@@ -46,21 +49,34 @@ public class GetVertexCypher extends Neo4j<Set<AbstractVertex>>
 	}
 
 	@Override
-	public Set<AbstractVertex> execute(Map<String, List<String>> parameters, Integer limit)
+	public Set<AbstractEdge> execute(Map<String, List<String>> parameters, Integer limit)
 	{
-		Set<AbstractVertex> vertexSet = null;
+		Set<AbstractEdge> edgeSet = null;
 		try
 		{
-			String queryString = prepareGetVertexQuery(parameters, limit);
-			vertexSet = prepareVertexSetFromNeo4jResult(queryString);
-			if(!CollectionUtils.isEmpty(vertexSet))
-				return vertexSet;
+			StringBuilder edgeQueryBuilder = new StringBuilder(50);
+			for(Map.Entry<String, List<String>> entry : parameters.entrySet())
+			{
+				String colName = entry.getKey();
+				List<String> values = entry.getValue();
+				edgeQueryBuilder.append(colName);
+				edgeQueryBuilder.append(":");
+				edgeQueryBuilder.append(values.get(COL_VALUE));
+				String boolOperator = values.get(BOOLEAN_OPERATOR);
+				if(boolOperator != null)
+					edgeQueryBuilder.append(boolOperator).append(" ");
+			}
+			spade.storage.Neo4j neo4jStorage = (spade.storage.Neo4j) currentStorage;
+			Graph result = neo4jStorage.getEdges(null, null, edgeQueryBuilder.toString());
+			edgeSet = result.edgeSet();
+			if(!CollectionUtils.isEmpty(edgeSet))
+				return edgeSet;
 		}
 		catch(Exception ex)
 		{
-			Logger.getLogger(GetVertexCypher.class.getName()).log(Level.SEVERE, "Error creating vertex set!", ex);
+			logger.log(Level.SEVERE, "Error creating edge set!", ex);
 		}
 
-		return vertexSet;
+		return edgeSet;
 	}
 }

@@ -16,6 +16,9 @@
  */
 package spade.core;
 
+import org.apache.commons.lang3.StringUtils;
+import org.mortbay.util.StringUtil;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,6 +36,7 @@ import static spade.core.AbstractAnalyzer.COMPARISON_OPERATORS;
  */
 public abstract class AbstractQuery<R>
 {
+    private Logger logger = Logger.getLogger(AbstractQuery.class.getName());
     // indices of variables in parameter map of GetVertex and GetEdge
     protected static final int COMPARISON_OPERATOR = 0;
     public static final int COL_VALUE = 1;
@@ -93,16 +97,24 @@ public abstract class AbstractQuery<R>
         // <key> COMPARISON_OPERATOR <value> [BOOLEAN_OPERATOR]
         Pattern constraints_pattern = Pattern.compile("((?i)(?<=(\\b" + BOOLEAN_OPERATORS + "\\b))|" +
                 "((?=(\\b" + BOOLEAN_OPERATORS + "\\b))))");
+        logger.log(Level.INFO, "constraints: " + constraints);
         String[] expressions = constraints_pattern.split(constraints);
+        logger.log(Level.INFO, "expressions: " + Arrays.toString(expressions));
 
         // extract the key value pairs
         int i = 0;
         while(i < expressions.length)
         {
             String expression = expressions[i];
+            if(StringUtils.isBlank(expression))
+            {
+                i++;
+                continue;
+            }
             Pattern expression_pattern = Pattern.compile("((?<=(" + COMPARISON_OPERATORS + "))|" +
                     "(?=(" + COMPARISON_OPERATORS + ")))");
             String[] operands = expression_pattern.split(expression);
+            logger.log(Level.INFO, "operands: " + Arrays.toString(operands));
             String key = operands[0].trim();
             String operator = operands[1].trim();
             String value = operands[2].trim();
@@ -126,7 +138,7 @@ public abstract class AbstractQuery<R>
 
             parameters.put(key, values);
         }
-
+        logger.log(Level.INFO, "parameters: " + parameters);
         return parameters;
     }
 }

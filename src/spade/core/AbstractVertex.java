@@ -229,6 +229,14 @@ public abstract class AbstractVertex implements Serializable
     {
         return "AbstractVertex{" +
                 "annotations=" + annotations +
-                '}';
-    }
+				"}";
+	}
+
+	public String prettyPrint()
+	{
+		return "\t\tVertex:\n\t\t{\n" +
+				"\t\t\thash:" + bigHashCode() + ",\n" +
+				"\t\t\tannotations:" + annotations + ",\n" +
+				"\t\t}";
+	}
 }

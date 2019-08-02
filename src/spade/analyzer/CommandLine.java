@@ -35,7 +35,7 @@ import spade.core.AbstractAnalyzer;
 import spade.core.AbstractQuery;
 import spade.core.AbstractStorage;
 import spade.core.Kernel;
-import spade.query.postgresql.QuickGrailExecutor;
+import spade.query.neo4j.QuickGrailExecutor;
 
 import static spade.core.AbstractQuery.getCurrentStorage;
 
@@ -165,10 +165,11 @@ public class CommandLine extends AbstractAnalyzer
             if(query != null && query.trim().toLowerCase().startsWith("set"))
             {
                 // set storage for querying
-                String output = parseSetStorage(query);
-                logger.log(Level.INFO, output);
-                outputStream.writeObject(output);
-                executor.createEnvironment();
+                boolean success = parseSetStorage(query, outputStream);
+                if(success)
+                {
+                    executor.createEnvironment();
+                }
                 return false;
             }
             if(getCurrentStorage() == null)
@@ -199,9 +200,10 @@ public class CommandLine extends AbstractAnalyzer
         }
     }
 
-    private static String parseSetStorage(String line)
+    private static boolean parseSetStorage(String line, ObjectOutputStream outputStream)
     {
-        String output = null;
+        boolean success = false;
+        String output = "";
         try
         {
             String[] tokens = line.split("\\s+");
@@ -215,6 +217,7 @@ public class CommandLine extends AbstractAnalyzer
                 {
                     AbstractQuery.setCurrentStorage(storage);
                     output = "Storage '" + storageName + "' successfully set for querying.";
+                    success = true;
                 }
                 else
                 {
@@ -225,9 +228,19 @@ public class CommandLine extends AbstractAnalyzer
         catch(Exception ex)
         {
             output = "Error setting storage!";
-            logger.log(Level.SEVERE, output, ex);
         }
-
-        return output;
+        finally
+        {
+            logger.log(Level.INFO, output);
+            try
+            {
+                outputStream.writeObject(output);
+            }
+            catch(IOException ex)
+            {
+                logger.log(Level.SEVERE, "Error writing output of set storage", ex);
+            }
+        }
+        return success;
     }
 }
