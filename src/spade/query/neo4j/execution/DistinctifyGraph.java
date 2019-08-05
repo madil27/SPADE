@@ -29,7 +29,10 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
 import static spade.query.neo4j.utility.CommonVariables.PRIMARY_KEY;
+import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
+import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
 
 /**
  * Remove all duplicated vertices and edges.
@@ -50,8 +53,11 @@ public class DistinctifyGraph extends Instruction
 	@Override
 	public void execute(Environment env, ExecutionContext ctx)
 	{
-		// just to make things work for now
-		targetGraph.setName(sourceGraph.getName());
+		if(!targetGraph.getName().equals(sourceGraph.getName()))
+		{
+			UnionGraph unionGraph = new UnionGraph(targetGraph, sourceGraph);
+			unionGraph.execute(env, ctx);
+		}
 	}
 
 	@Override

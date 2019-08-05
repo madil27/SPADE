@@ -26,54 +26,59 @@ import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
-import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
-import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
+import static spade.query.neo4j.kernel.Resolver.formatString;
+import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
 
 /**
- * Get end points of all edges in a graph.
+ * Get the a set of vertices in a graph.
  */
-public class GetEdgeEndpoint extends Instruction
+public class GetVertex extends Instruction
 {
 	// Output graph.
 	private Graph targetGraph;
 	// Input graph.
 	private Graph subjectGraph;
-	// End-point component (source / destination, or both)
-	private Component component;
+	private String field;
+	private String operation;
+	private String value;
 
-	public GetEdgeEndpoint(Graph targetGraph, Graph subjectGraph, Component component)
+	public GetVertex(Graph targetGraph, Graph subjectGraph, String field, String operation, String value)
 	{
 		this.targetGraph = targetGraph;
 		this.subjectGraph = subjectGraph;
-		this.component = component;
+		this.field = field;
+		this.operation = operation;
+		this.value = value;
 	}
 
 	@Override
 	public void execute(Environment env, ExecutionContext ctx)
 	{
 		Neo4jExecutor ns = ctx.getExecutor();
-		String subjectEdgeTable = subjectGraph.getEdgeTableName();
+		String subjectVertexTable = subjectGraph.getVertexTableName();
 		String targetVertexTable = targetGraph.getVertexTableName();
-		String query = "MATCH (child)-[" + EDGE_ALIAS + ":" + EDGE + "]->(parent) ";
-		if(!Environment.IsBaseGraph(subjectGraph))
+		String cypherQuery = "MATCH (" + VERTEX_ALIAS + ":" + subjectVertexTable + ") ";
+		if(field == null)
 		{
-			query += "WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + subjectEdgeTable + ",' ";
+			cypherQuery += " SET " + VERTEX_ALIAS + ":" + targetVertexTable;
 		}
-		if(component == Component.kSource || component == Component.kBoth)
+		else
 		{
-			query += " SET child:" + targetVertexTable;
+			// TODO: handle wild card columns
+			if(!field.equals("*"))
+			{
+				cypherQuery += " WHERE " + VERTEX_ALIAS + "." + field + operation;
+				cypherQuery += formatString(value, false);
+				cypherQuery += " SET " + VERTEX_ALIAS + ":" + targetVertexTable;
+			}
 		}
-		if(component == Component.kDestination || component == Component.kBoth)
-		{
-			query += " SET parent:" + targetVertexTable;
-		}
-		ns.executeQuery(query);
+		ns.executeQuery(cypherQuery);
 	}
 
 	@Override
 	public String getLabel()
 	{
-		return "GetEdgeEndpoint";
+		return "GetVertex";
 	}
 
 	@Override
@@ -89,15 +94,13 @@ public class GetEdgeEndpoint extends Instruction
 		inline_field_values.add(targetGraph.getName());
 		inline_field_names.add("subjectGraph");
 		inline_field_values.add(subjectGraph.getName());
-		inline_field_names.add("component");
-		inline_field_values.add(component.name().substring(1));
-	}
+		inline_field_names.add("field");
+		inline_field_values.add(field);
+		inline_field_names.add("operation");
+		inline_field_values.add(operation);
+		inline_field_names.add("value");
+		inline_field_values.add(value);
 
-	public enum Component
-	{
-		kSource,
-		kDestination,
-		kBoth
 	}
 
 }

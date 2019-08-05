@@ -962,7 +962,9 @@ public class Graph extends AbstractStorage implements Serializable
             printStr.append(vertex.prettyPrint());
             printStr.append(",\n");
         }
-        return printStr.substring(0, printStr.length() - 2);
+        if(printStr.length() > 0)
+            return printStr.substring(0, printStr.length() - 2);
+        return "\t\tNo Vertices";
     }
 
     private String prettyPrintEdges()
@@ -973,7 +975,9 @@ public class Graph extends AbstractStorage implements Serializable
             printStr.append(edge.prettyPrint());
             printStr.append(",\n");
         }
-        return printStr.substring(0, printStr.length() - 2);
+        if(printStr.length() > 0)
+            return printStr.substring(0, printStr.length() - 2);
+        return "\t\tNo edges";
     }
 
     // prints in a JSON like format

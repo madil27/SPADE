@@ -23,11 +23,13 @@ import spade.query.neo4j.entities.Graph;
 import spade.query.neo4j.kernel.Environment;
 import spade.query.neo4j.utility.TreeStringSerializable;
 import spade.storage.neo4j.Neo4jExecutor;
-import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
-import static spade.query.neo4j.utility.CommonVariables.PRIMARY_KEY;
+import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
+import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
+import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
+import static spade.query.neo4j.utility.CommonVariables.VERTEX_TABLE;
 
 /**
  * Union one graph into the other.
@@ -36,7 +38,7 @@ public class UnionGraph extends Instruction
 {
 	// The target graph.
 	private Graph targetGraph;
-	// The source graph to be unioned into the target graph.
+	// The source graph to be union-ed into the target graph.
 	private Graph sourceGraph;
 
 	public UnionGraph(Graph targetGraph, Graph sourceGraph)
@@ -48,16 +50,36 @@ public class UnionGraph extends Instruction
 	@Override
 	public void execute(Environment env, ExecutionContext ctx)
 	{
+		// go into sourceGraph and put labels of targetGraph in all its edges and vertices
 		String sourceVertexTable = sourceGraph.getVertexTableName();
 		String sourceEdgeTable = sourceGraph.getEdgeTableName();
 		String targetVertexTable = targetGraph.getVertexTableName();
 		String targetEdgeTable = targetGraph.getEdgeTableName();
 
 		Neo4jExecutor ns = ctx.getExecutor();
-		ns.executeQuery("INSERT INTO " + targetVertexTable +
-				" SELECT " + PRIMARY_KEY + " FROM " + sourceVertexTable + ";");
-		ns.executeQuery("INSERT INTO " + targetEdgeTable +
-				" SELECT " + PRIMARY_KEY + " FROM " + sourceEdgeTable + ";");
+		// union vertices
+		String cypherQuery = "MATCH (" + VERTEX_ALIAS + ":" + sourceVertexTable + ") SET " +
+				VERTEX_ALIAS + ":" + targetVertexTable;
+
+		// allows execution of multiple queries in one statement
+		cypherQuery += " WITH count(*) as dummy \n";
+
+		cypherQuery += "MATCH (child:" + sourceVertexTable + ")-[" + EDGE_ALIAS + ":" + EDGE + "]->(parent:" +
+				sourceVertexTable + ") ";
+		if(!Environment.IsBaseGraph(sourceGraph))
+		{
+			cypherQuery += " WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + sourceEdgeTable + ",'";
+		}
+		// add vertex label
+		cypherQuery += " SET child:" + targetVertexTable + " SET parent:" + targetVertexTable;
+		// add edge label
+		cypherQuery += " SET " + EDGE_ALIAS + ".quickgrail_symbol = CASE WHEN NOT EXISTS(" + EDGE_ALIAS +
+				".quickgrail_symbol) THEN '," + targetEdgeTable + ",'" +
+				" WHEN " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," +
+				targetEdgeTable + ",' THEN " + EDGE_ALIAS + ".quickgrail_symbol " +
+				" ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," + targetEdgeTable + ",' END";
+
+		ns.executeQuery(cypherQuery);
 	}
 
 	@Override

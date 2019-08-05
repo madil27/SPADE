@@ -48,6 +48,13 @@ public class GetLineage extends Instruction
 	// Direction (ancestors / descendants, or both).
 	private Direction direction;
 
+	public enum Direction
+	{
+		kAncestor,
+		kDescendant,
+		kBoth
+	}
+
 	public GetLineage(Graph targetGraph, Graph subjectGraph,
 					  Graph startGraph, Integer depth, Direction direction)
 	{
@@ -174,12 +181,5 @@ public class GetLineage extends Instruction
 		inline_field_values.add(String.valueOf(depth));
 		inline_field_names.add("direction");
 		inline_field_values.add(direction.name().substring(1));
-	}
-
-	public enum Direction
-	{
-		kAncestor,
-		kDescendant,
-		kBoth
 	}
 }

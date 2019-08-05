@@ -441,18 +441,29 @@ public class Neo4j extends AbstractStorage
 
 	public void globalTxCheckin(boolean forcedFlush)
 	{
-  		if ((globalTxCount % GLOBAL_TX_SIZE == 0) || (forcedFlush == true)) {
+        if((globalTxCount % GLOBAL_TX_SIZE == 0) || (forcedFlush == true))
+        {
             globalTxFinalize();
             globalTx = graphDb.beginTx();
   		}
   		globalTxCount++;
   	}
 
-  	void globalTxFinalize() {
-  		if (globalTx != null) {
-  			try {
+    void globalTxFinalize()
+    {
+        if(globalTx != null)
+        {
+            try
+            {
   				globalTx.success();
-  			} finally {
+            }
+            catch(Exception ex)
+            {
+                globalTx.failure();
+                logger.log(Level.SEVERE, "Unable to commit transaction. Rolling back!");
+            }
+            finally
+            {
   				globalTx.close();
   			}
   		}
@@ -822,6 +833,7 @@ public class Neo4j extends AbstractStorage
     @Override
 	public Result executeQuery(String query)
 	{
+        logger.log(Level.INFO, "Executing query: " + query);
 		Result result = null;
 		try
 		{

@@ -42,8 +42,7 @@ import static spade.query.neo4j.utility.Neo4jUtil.removeDollar;
 
 /**
  * QuickGrail compile-time environment (also used in runtime) mainly for
- * managing symbols (e.g. mapping from graph variables to underlying Neo4j
- * tables).
+ * managing symbols (e.g. mapping from graph variables to underlying Neo4j).
  */
 public class Environment extends TreeStringSerializable
 {
@@ -51,7 +50,7 @@ public class Environment extends TreeStringSerializable
 	private HashMap<String, String> symbols;
 	private Neo4jExecutor executor;
 	// for querying with Neo4j storage
-	private String resultGraph;
+	private static String resultGraphName;
 	private static final Logger logger = Logger.getLogger(Environment.class.getName());
 
 	public Environment(Neo4jExecutor ns)
@@ -105,7 +104,7 @@ public class Environment extends TreeStringSerializable
 
 	public Graph allocateGraph()
 	{
-		return new Graph(null);
+		return new Graph(resultGraphName);
 	}
 
 	public GraphMetadata allocateGraphMetadata()
@@ -128,9 +127,9 @@ public class Environment extends TreeStringSerializable
 		return null;
 	}
 
-	public void setResultGraph(String resultGraph)
+	public void setResultGraphName(String resultGraphName)
 	{
-		this.resultGraph = resultGraph;
+		Environment.resultGraphName = resultGraphName;
 	}
 
 	public void setValue(String symbol, String value)
@@ -159,9 +158,9 @@ public class Environment extends TreeStringSerializable
 			executor.executeQuery(removeLabelQuery);
 			// remove label from all relationships
 			String removeSymbolQuery = "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->() " +
-					"WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '" + removeDollar(symbol) + ",'" +
+					"WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + removeDollar(symbol) + ",'" +
 					"SET " + EDGE_ALIAS + ".quickgrail_symbol = " +
-					"replace(" + EDGE_ALIAS + ".quickgrail_symbol, '" + removeDollar(symbol) + ",', '')";
+					"replace(" + EDGE_ALIAS + ".quickgrail_symbol, '," + removeDollar(symbol) + ",', '')";
 			executor.executeQuery(removeSymbolQuery);
 			symbols.remove(symbol);
 		}

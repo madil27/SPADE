@@ -26,26 +26,30 @@ import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
+import static spade.query.neo4j.kernel.Resolver.formatString;
 import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
 import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
 
 /**
- * Get end points of all edges in a graph.
+ * Get the a set of edges in a graph.
  */
-public class GetEdgeEndpoint extends Instruction
+public class GetEdge extends Instruction
 {
 	// Output graph.
 	private Graph targetGraph;
 	// Input graph.
 	private Graph subjectGraph;
-	// End-point component (source / destination, or both)
-	private Component component;
+	private String field;
+	private String operation;
+	private String value;
 
-	public GetEdgeEndpoint(Graph targetGraph, Graph subjectGraph, Component component)
+	public GetEdge(Graph targetGraph, Graph subjectGraph, String field, String operation, String value)
 	{
 		this.targetGraph = targetGraph;
 		this.subjectGraph = subjectGraph;
-		this.component = component;
+		this.field = field;
+		this.operation = operation;
+		this.value = value;
 	}
 
 	@Override
@@ -53,27 +57,47 @@ public class GetEdgeEndpoint extends Instruction
 	{
 		Neo4jExecutor ns = ctx.getExecutor();
 		String subjectEdgeTable = subjectGraph.getEdgeTableName();
-		String targetVertexTable = targetGraph.getVertexTableName();
-		String query = "MATCH (child)-[" + EDGE_ALIAS + ":" + EDGE + "]->(parent) ";
+		String targetEdgeTable = targetGraph.getEdgeTableName();
+
+		String cypherQuery = "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->() ";
 		if(!Environment.IsBaseGraph(subjectGraph))
 		{
-			query += "WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + subjectEdgeTable + ",' ";
+			cypherQuery += " WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + subjectEdgeTable + ",' ";
+			if(field != null)
+			{
+				// TODO: handle wild card columns
+				if(!field.equals("*"))
+				{
+					cypherQuery += " AND " + EDGE_ALIAS + "." + field + operation + formatString(value, false);
+				}
+
+			}
 		}
-		if(component == Component.kSource || component == Component.kBoth)
+		else
 		{
-			query += " SET child:" + targetVertexTable;
+			if(field != null)
+			{
+				// TODO: handle wild card columns
+				if(!field.equals("*"))
+				{
+					cypherQuery += " WHERE " + EDGE_ALIAS + "." + field + operation + formatString(value, false);
+				}
+
+			}
 		}
-		if(component == Component.kDestination || component == Component.kBoth)
-		{
-			query += " SET parent:" + targetVertexTable;
-		}
-		ns.executeQuery(query);
+		cypherQuery += " SET " + EDGE_ALIAS + ".quickgrail_symbol = CASE WHEN NOT EXISTS(" + EDGE_ALIAS +
+				".quickgrail_symbol) THEN '," + targetEdgeTable + ",'" +
+				" WHEN " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," +
+				targetEdgeTable + ",' THEN " + EDGE_ALIAS + ".quickgrail_symbol " +
+				" ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," + targetEdgeTable + ",' END";
+
+		ns.executeQuery(cypherQuery);
 	}
 
 	@Override
 	public String getLabel()
 	{
-		return "GetEdgeEndpoint";
+		return "GetEdge";
 	}
 
 	@Override
@@ -89,15 +113,12 @@ public class GetEdgeEndpoint extends Instruction
 		inline_field_values.add(targetGraph.getName());
 		inline_field_names.add("subjectGraph");
 		inline_field_values.add(subjectGraph.getName());
-		inline_field_names.add("component");
-		inline_field_values.add(component.name().substring(1));
-	}
-
-	public enum Component
-	{
-		kSource,
-		kDestination,
-		kBoth
+		inline_field_names.add("field");
+		inline_field_values.add(field);
+		inline_field_names.add("operation");
+		inline_field_values.add(operation);
+		inline_field_names.add("value");
+		inline_field_values.add(value);
 	}
 
 }
