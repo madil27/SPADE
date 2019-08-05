@@ -68,22 +68,18 @@ public class Neo4jUtil
 				label = removeDollar(label);
 		}
 		return ns.executeQueryForLongResult("MATCH (" + VERTEX_ALIAS + ":" + label + ")  " +
-				" RETURN COUNT(*) AS count");
+				" RETURN COUNT(*) as count");
 	}
 
 	public static long GetNumEdges(Neo4jExecutor ns, String label)
 	{
 		String query;
-		switch(label)
+		query = "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->() ";
+		if(!label.equals("$base") && !label.equals(EDGE.toString()))
 		{
-			case "$base":
-				query = "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->() RETURN  count(*) as count";
-				break;
-			default:
-				query = "MATCH ()-[e:EDGE]->() " +
-						" WHERE e.quickgrail_symbol CONTAINS '" + removeDollar(label) + ",' " +
-						" RETURN count(*) as count";
+			query += " WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + removeDollar(label) + ",' ";
 		}
+		query += " RETURN  count(*) as count";
 		return ns.executeQueryForLongResult(query);
 	}
 

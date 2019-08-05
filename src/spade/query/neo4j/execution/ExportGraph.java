@@ -19,7 +19,6 @@
  */
 package spade.query.neo4j.execution;
 
-import org.neo4j.shell.apps.Export;
 import spade.core.AbstractEdge;
 import spade.core.AbstractVertex;
 import spade.query.neo4j.entities.Graph;
@@ -35,10 +34,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
-import static spade.query.neo4j.utility.CommonVariables.NodeTypes.VERTEX;
 import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
 import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
-import static spade.query.neo4j.utility.Neo4jUtil.removeDollar;
 
 /**
  * Export a QuickGrail graph to spade.core.Graph.
@@ -90,7 +87,7 @@ public class ExportGraph extends Instruction
 		spade.core.Graph resultGraph = new spade.core.Graph();
 		if(numVertices > 0)
 		{
-			String vertexQuery = "MATCH (" + VERTEX_ALIAS + ":" + removeDollar(targetVertexTable) + ") RETURN " + VERTEX_ALIAS;
+			String vertexQuery = "MATCH (" + VERTEX_ALIAS + ":" + targetVertexTable + ") RETURN " + VERTEX_ALIAS;
 			Map<String, AbstractVertex> vertices = Neo4jUtil.prepareVertexMapFromNeo4jResult(ns, vertexQuery);
 
 			String edgeQuery;
@@ -101,7 +98,7 @@ public class ExportGraph extends Instruction
 			else
 			{
 				edgeQuery = "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->() " +
-						" WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '" + removeDollar(targetEdgeTable) + ",' " +
+						" WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + targetEdgeTable + ",' " +
 						" RETURN " + EDGE_ALIAS;
 			}
 			Set<AbstractEdge> edges = Neo4jUtil.prepareEdgeSetFromNeo4jResult(ns, edgeQuery, vertices);

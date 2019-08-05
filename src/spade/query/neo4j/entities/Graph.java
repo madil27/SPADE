@@ -24,6 +24,8 @@ import spade.query.neo4j.utility.TreeStringSerializable;
 
 import java.util.ArrayList;
 
+import static spade.query.neo4j.utility.Neo4jUtil.removeDollar;
+
 /**
  * Intermediate representation for a graph in QuickGrail optimizer.
  */
@@ -83,14 +85,14 @@ public class Graph extends Entity
 	{
 		if(name.equals("$base"))
 			return CommonVariables.NodeTypes.VERTEX.toString();
-		return name;
+		return removeDollar(name);
 	}
 
 	public String getEdgeTableName()
 	{
 		if(name.equals("$base"))
 			return CommonVariables.RelationshipTypes.EDGE.toString();
-		return name;
+		return removeDollar(name);
 	}
 
 	public String getTableName(Component component)

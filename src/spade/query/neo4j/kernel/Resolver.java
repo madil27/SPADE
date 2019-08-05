@@ -32,12 +32,14 @@ import spade.query.neo4j.execution.DistinctifyGraph;
 import spade.query.neo4j.execution.EraseSymbols;
 import spade.query.neo4j.execution.EvaluateQuery;
 import spade.query.neo4j.execution.ExportGraph;
+import spade.query.neo4j.execution.GetEdge;
 import spade.query.neo4j.execution.GetEdgeEndpoint;
 import spade.query.neo4j.execution.GetLineage;
 import spade.query.neo4j.execution.GetLink;
 import spade.query.neo4j.execution.GetPath;
 import spade.query.neo4j.execution.GetShortestPath;
 import spade.query.neo4j.execution.GetSubgraph;
+import spade.query.neo4j.execution.GetVertex;
 import spade.query.neo4j.execution.InsertLiteralEdge;
 import spade.query.neo4j.execution.InsertLiteralVertex;
 import spade.query.neo4j.execution.Instruction;
@@ -69,8 +71,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static spade.query.neo4j.utility.CommonVariables.PRIMARY_KEY;
 
 /**
  * Resolver that transforms a parse tree into a QuickGrail low-level program.
@@ -188,14 +188,16 @@ public class Resolver
 		ParseAssignment.AssignmentType atype = parseAssignment.getAssignmentType();
 
 		Graph resultGraph;
-		// this is done in order to propagate the resulting graph/label name
+		// this is done in order to propagate the resulting label/variable
 		// to the Neo4j query classes for adding to the nodes and relationships
 		if(currentStorageName.equalsIgnoreCase("Neo4j"))
 		{
-			if(env.lookup(var.getValue()) != null)
+			String lhs = var.getValue();
+			if(lhs.equals("$base"))
 			{
-				env.setResultGraph(var.getValue());
+				throw new RuntimeException("Cannot reassign reserved variables.");
 			}
+			env.setResultGraphName(lhs);
 		}
 		if(atype == ParseAssignment.AssignmentType.kEqual)
 		{
@@ -524,10 +526,10 @@ public class Resolver
 		switch(methodName.getValue())
 		{
 			case "getVertex":
-				return resolveGetVertexOrEdge(Graph.Component.kVertex, subject, arguments, ToGraph(outputEntity));
+				return resolveGetVertex(Graph.Component.kVertex, subject, arguments, ToGraph(outputEntity));
 			case "getEdge":
 			{
-				Graph edges = resolveGetVertexOrEdge(Graph.Component.kEdge, subject, arguments, ToGraph(outputEntity));
+				Graph edges = resolveGetEdge(Graph.Component.kEdge, subject, arguments, ToGraph(outputEntity));
 				Graph outputGraph = (Graph) outputEntity;
 				if(outputGraph == null)
 				{
@@ -706,15 +708,43 @@ public class Resolver
 		return outputGraph;
 	}
 
-	private Graph resolveGetVertexOrEdge(Graph.Component component,
-										 Graph subjectGraph,
-										 ArrayList<ParseExpression> arguments,
-										 Graph outputGraph)
+	private Graph resolveGetEdge(Graph.Component component,
+								 Graph subjectGraph,
+								 ArrayList<ParseExpression> arguments,
+								 Graph outputGraph)
 	{
 		if(arguments.size() > 1)
 		{
 			throw new RuntimeException(
-					"Invalid number of arguments for getVertex/getEdge: expected 0 or 1");
+					"Invalid number of arguments for GetEdge: expected 0 or 1");
+		}
+
+		if(arguments.isEmpty())
+		{
+			// Get all the edges.
+			if(outputGraph == null)
+			{
+				outputGraph = allocateEmptyGraph();
+			}
+			instructions.add(new GetEdge(outputGraph, subjectGraph, null, null, null));
+
+			return outputGraph;
+		}
+		else
+		{
+			return resolveGetVertexOrEdgePredicate(component, subjectGraph, arguments.get(0), outputGraph);
+		}
+	}
+
+	private Graph resolveGetVertex(Graph.Component component,
+								   Graph subjectGraph,
+								   ArrayList<ParseExpression> arguments,
+								   Graph outputGraph)
+	{
+		if(arguments.size() > 1)
+		{
+			throw new RuntimeException(
+					"Invalid number of arguments for GetVertex: expected 0 or 1");
 		}
 
 		if(arguments.isEmpty())
@@ -724,17 +754,8 @@ public class Resolver
 			{
 				outputGraph = allocateEmptyGraph();
 			}
+			instructions.add(new GetVertex(outputGraph, subjectGraph, null, null, null));
 
-			StringBuilder sqlQuery = new StringBuilder(100);
-			sqlQuery.append("INSERT INTO " + outputGraph.getTableName(component) +
-					" SELECT " + PRIMARY_KEY + " FROM " + Graph.GetBaseAnnotationTableName(component));
-			if(!Environment.IsBaseGraph(subjectGraph))
-			{
-				sqlQuery.append(" WHERE " + PRIMARY_KEY + " IN (SELECT " + PRIMARY_KEY + " FROM " +
-						subjectGraph.getTableName(component) + ")");
-			}
-			sqlQuery.append(" GROUP BY " + PRIMARY_KEY + ";");
-			instructions.add(new EvaluateQuery(sqlQuery.toString()));
 			return outputGraph;
 		}
 		else
@@ -855,23 +876,14 @@ public class Resolver
 		{
 			outputGraph = allocateEmptyGraph();
 		}
-
-		StringBuilder sqlQuery = new StringBuilder(100);
-		sqlQuery.append("INSERT INTO " + outputGraph.getTableName(component) +
-				" SELECT " + PRIMARY_KEY + " FROM " + Graph.GetBaseAnnotationTableName(component) + " WHERE ");
-		// TODO: handle wild card columns
-		if(!field.equals("*"))
+		if(component == Graph.Component.kVertex)
 		{
-			sqlQuery.append(formatString(field, true) + op + formatString(value, false));
+			instructions.add(new GetVertex(outputGraph, subjectGraph, field, op, value));
 		}
-		if(!Environment.IsBaseGraph(subjectGraph))
+		else if(component == Graph.Component.kEdge)
 		{
-			sqlQuery.append(" AND " + PRIMARY_KEY + " IN (SELECT " + PRIMARY_KEY + " FROM " +
-					subjectGraph.getTableName(component) + ")");
+			instructions.add(new GetEdge(outputGraph, subjectGraph, field, op, value));
 		}
-		sqlQuery.append(" GROUP BY " + PRIMARY_KEY + ";");
-		instructions.add(new EvaluateQuery(sqlQuery.toString()));
-
 		return outputGraph;
 	}
 
@@ -1227,8 +1239,10 @@ public class Resolver
 		return metadata;
 	}
 
-	private String formatString(String str, boolean field)
+	public static String formatString(String str, boolean field)
 	{
+		if(str == null)
+			return str;
 		StringBuilder sb = new StringBuilder(100);
 		boolean escaped = false;
 		for(int i = 0; i < str.length(); ++i)
