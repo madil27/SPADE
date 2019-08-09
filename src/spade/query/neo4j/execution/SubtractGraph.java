@@ -23,11 +23,12 @@ import spade.query.neo4j.entities.Graph;
 import spade.query.neo4j.kernel.Environment;
 import spade.query.neo4j.utility.TreeStringSerializable;
 import spade.storage.neo4j.Neo4jExecutor;
-import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
-import static spade.query.neo4j.utility.CommonVariables.PRIMARY_KEY;
+import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
+import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
+import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
 
 /**
  * Subtract one graph from the other.
@@ -62,20 +63,29 @@ public class SubtractGraph extends Instruction
 		String subtrahendEdgeTable = subtrahendGraph.getEdgeTableName();
 
 		Neo4jExecutor ns = ctx.getExecutor();
+		String cypherQuery = "";
 		if(component == null || component == Graph.Component.kVertex)
 		{
-			ns.executeQuery("INSERT INTO " + outputVertexTable +
-					" SELECT " + PRIMARY_KEY + " FROM " + minuendVertexTable +
-					" WHERE " + PRIMARY_KEY + " NOT IN (SELECT " + PRIMARY_KEY +
-					" FROM " + subtrahendVertexTable + ");");
+			cypherQuery += "MATCH (" + VERTEX_ALIAS + ") WHERE " +
+					VERTEX_ALIAS + ":" + minuendVertexTable +
+					" AND NOT " + VERTEX_ALIAS + ":" + subtrahendVertexTable +
+					" SET " + VERTEX_ALIAS + ":" + outputVertexTable;
+			// allows execution of multiple queries in one statement
+			cypherQuery += " WITH count(*) as dummy \n";
 		}
 		if(component == null || component == Graph.Component.kEdge)
 		{
-			ns.executeQuery("INSERT INTO " + outputEdgeTable +
-					" SELECT " + PRIMARY_KEY + " FROM " + minuendEdgeTable +
-					" WHERE " + PRIMARY_KEY + " NOT IN (SELECT " + PRIMARY_KEY +
-					" FROM " + subtrahendEdgeTable + ");");
+			cypherQuery += "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->() " +
+					" WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + minuendEdgeTable +
+					",' AND NOT " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + subtrahendEdgeTable +
+					",' SET " + EDGE_ALIAS + ".quickgrail_symbol = CASE WHEN NOT EXISTS(" + EDGE_ALIAS +
+					".quickgrail_symbol) THEN '," + outputEdgeTable + ",'" +
+					" WHEN " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," +
+					outputEdgeTable + ",' THEN " + EDGE_ALIAS + ".quickgrail_symbol " +
+					" ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," + outputEdgeTable + ",' END";
+
 		}
+		ns.executeQuery(cypherQuery);
 	}
 
 	@Override

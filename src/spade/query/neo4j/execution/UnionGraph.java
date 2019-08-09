@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
 import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
 import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
-import static spade.query.neo4j.utility.CommonVariables.VERTEX_TABLE;
 
 /**
  * Union one graph into the other.
@@ -64,7 +63,7 @@ public class UnionGraph extends Instruction
 		// allows execution of multiple queries in one statement
 		cypherQuery += " WITH count(*) as dummy \n";
 
-		cypherQuery += "MATCH (child:" + sourceVertexTable + ")-[" + EDGE_ALIAS + ":" + EDGE + "]->(parent:" +
+		cypherQuery += "MATCH (child:" + sourceVertexTable + ")-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->(parent:" +
 				sourceVertexTable + ") ";
 		if(!Environment.IsBaseGraph(sourceGraph))
 		{

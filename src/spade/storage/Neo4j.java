@@ -75,6 +75,7 @@ import spade.utility.CommonFunctions;
 
 import static spade.core.Kernel.CONFIG_PATH;
 import static spade.core.Kernel.FILE_SEPARATOR;
+import static spade.core.Kernel.transformers;
 
 /**
  * Neo4j storage implementation.
@@ -470,6 +471,23 @@ public class Neo4j extends AbstractStorage
   		globalTxCount = 0;
   	}
 
+    void rollback()
+    {
+        if(globalTx != null)
+        {
+            try
+            {
+                globalTx.failure();
+                globalTx.close();
+                logger.log(Level.SEVERE, "Rolling back uncommitted transaction!");
+            }
+            catch(Exception ex)
+            {
+                logger.log(Level.SEVERE, "Error rolling back uncommitted transactions!");
+            }
+        }
+    }
+
     @Override
     public boolean putVertex(AbstractVertex incomingVertex)
     {
@@ -843,6 +861,7 @@ public class Neo4j extends AbstractStorage
 		catch(QueryExecutionException ex)
 		{
 			logger.log(Level.SEVERE, "Neo4j Cypher query execution not successful!", ex);
+            rollback();
 		}
 		finally
 		{

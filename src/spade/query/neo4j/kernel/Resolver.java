@@ -225,6 +225,7 @@ public class Resolver
 					{
 						resultGraph = allocateEmptyGraph();
 						instructions.add(new UnionGraph(resultGraph, lhsGraph));
+						instructions.add(new UnionGraph(resultGraph, lhsGraph));
 					}
 					resolveGraphExpression(rhs, resultGraph, true);
 					break;

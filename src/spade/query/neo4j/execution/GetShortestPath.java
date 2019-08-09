@@ -23,14 +23,15 @@ import spade.query.neo4j.entities.Graph;
 import spade.query.neo4j.kernel.Environment;
 import spade.query.neo4j.utility.TreeStringSerializable;
 import spade.storage.neo4j.Neo4jExecutor;
-import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
 import static spade.query.neo4j.utility.CommonVariables.CHILD_VERTEX_KEY;
+import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
 import static spade.query.neo4j.utility.CommonVariables.EDGE_TABLE;
 import static spade.query.neo4j.utility.CommonVariables.PARENT_VERTEX_KEY;
 import static spade.query.neo4j.utility.CommonVariables.PRIMARY_KEY;
+import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
 
 /**
  * Similar to GetPath but the result graph only contains vertices / edges that
@@ -45,9 +46,9 @@ public class GetShortestPath extends Instruction
 	// Input graph.
 	private Graph subjectGraph;
 	// Set of source vertices.
-	private Graph srcGraph;
+	private Graph sourceGraph;
 	// Set of destination vertices.
-	private Graph dstGraph;
+	private Graph destinationGraph;
 	// Max path length.
 	private Integer maxDepth;
 
@@ -57,8 +58,8 @@ public class GetShortestPath extends Instruction
 	{
 		this.targetGraph = targetGraph;
 		this.subjectGraph = subjectGraph;
-		this.srcGraph = srcGraph;
-		this.dstGraph = dstGraph;
+		this.sourceGraph = srcGraph;
+		this.destinationGraph = dstGraph;
 		this.maxDepth = maxDepth;
 	}
 
@@ -67,113 +68,30 @@ public class GetShortestPath extends Instruction
 	{
 		Neo4jExecutor ns = ctx.getExecutor();
 
-		String filter;
-		ns.executeQuery("DROP TABLE IF EXISTS m_conn;" +
-				"CREATE TABLE m_conn (\"" + CHILD_VERTEX_KEY + "\" UUID, \"" + PARENT_VERTEX_KEY + "\" UUID);");
-		if(Environment.IsBaseGraph(subjectGraph))
-		{
-			filter = "";
-			ns.executeQuery("INSERT INTO m_conn SELECT \"" + CHILD_VERTEX_KEY + "\", \"" + PARENT_VERTEX_KEY
-					+ "\" FROM " + EDGE_TABLE + " GROUP BY \"" + CHILD_VERTEX_KEY + "\", \"" + PARENT_VERTEX_KEY + "\";");
-		}
-		else
-		{
-			String subjectEdgeTable = subjectGraph.getEdgeTableName();
-			filter = " AND " + EDGE_TABLE + "." + PRIMARY_KEY + " IN (SELECT " + PRIMARY_KEY + " FROM "
-					+ subjectEdgeTable + ")";
-			ns.executeQuery("DROP TABLE IF EXISTS m_sgedge;" +
-					"CREATE TABLE m_sgedge (\"" + CHILD_VERTEX_KEY + "\" UUID, \"" + PARENT_VERTEX_KEY + "\" UUID);" +
-					"INSERT INTO m_sgedge SELECT \"" + CHILD_VERTEX_KEY + "\", \"" + PARENT_VERTEX_KEY + "\" FROM " +
-					EDGE_TABLE + " WHERE " + PRIMARY_KEY + " IN (SELECT " + PRIMARY_KEY + " FROM " +
-					subjectEdgeTable + ");" + "INSERT INTO m_conn SELECT \"" + CHILD_VERTEX_KEY + "\", \"" +
-					PARENT_VERTEX_KEY + "\" FROM m_sgedge GROUP BY \"" + CHILD_VERTEX_KEY + "\", \"" +
-					PARENT_VERTEX_KEY + "\";" + "DROP TABLE IF EXISTS m_sgedge;");
-		}
-
-		// Create subgraph edges table.
-		ns.executeQuery("DROP TABLE IF EXISTS m_sgconn;" +
-				"CREATE TABLE m_sgconn (\"" + CHILD_VERTEX_KEY + "\" UUID, \"" + PARENT_VERTEX_KEY +
-				"\" UUID, reaching INT, depth INT);");
-
-		ns.executeQuery("DROP TABLE IF EXISTS m_cur;" +
-				"DROP TABLE IF EXISTS m_next;" +
-				"DROP TABLE IF EXISTS m_answer;" +
-				"CREATE TABLE m_cur (" + PRIMARY_KEY + " UUID, reaching INT);" +
-				"CREATE TABLE m_next (" + PRIMARY_KEY + " INT, reaching INT);" +
-				"CREATE TABLE m_answer (" + PRIMARY_KEY + " UUID);");
-
-		ns.executeQuery("INSERT INTO m_cur SELECT " + PRIMARY_KEY + ", " + PRIMARY_KEY + " FROM " +
-				dstGraph.getVertexTableName() + ";" +
-				"INSERT INTO m_answer SELECT " + PRIMARY_KEY + " FROM m_cur GROUP BY " + PRIMARY_KEY + ";");
-
-		String loopStmts =
-				"INSERT INTO m_sgconn SELECT \"" + CHILD_VERTEX_KEY + "\", \"" + PARENT_VERTEX_KEY +
-						"\", reaching, $depth" + " FROM m_cur, m_conn WHERE " + PRIMARY_KEY + " = \""
-						+ PARENT_VERTEX_KEY + "\";" + "DROP TABLE IF EXISTS m_next;" + "CREATE TABLE m_next (" +
-						PRIMARY_KEY + " UUID, reaching INT);" + "INSERT INTO m_next SELECT \"" + CHILD_VERTEX_KEY +
-						"\", reaching" + " FROM m_cur, m_conn WHERE " + PRIMARY_KEY + " = \"" + PARENT_VERTEX_KEY +
-						"\";" + "DROP TABLE IF EXISTS m_cur;" + "CREATE TABLE m_cur (" + PRIMARY_KEY +
-						" UUID, reaching INT);" + "INSERT INTO m_cur SELECT " + PRIMARY_KEY + ", reaching FROM m_next" +
-						" WHERE " + PRIMARY_KEY + " NOT IN (SELECT " + PRIMARY_KEY + " FROM m_answer) GROUP BY " +
-						PRIMARY_KEY + ", reaching;" +
-						"INSERT INTO m_answer SELECT " + PRIMARY_KEY + " FROM m_cur GROUP BY " + PRIMARY_KEY + ";";
-		for(int i = 0; i < maxDepth; ++i)
-		{
-			ns.executeQuery(loopStmts.replace("$depth", String.valueOf(i + 1)));
-
-			String worksetSizeQuery = "COPY (SELECT COUNT(*) FROM m_cur) TO stdout;";
-			if(ns.executeQueryForLongResult(worksetSizeQuery) == 0)
-			{
-				break;
-			}
-		}
-
-		ns.executeQuery("DROP TABLE IF EXISTS m_cur;" +
-				"DROP TABLE IF EXISTS m_next;" +
-				"CREATE TABLE m_cur (" + PRIMARY_KEY + " UUID);" +
-				"CREATE TABLE m_next (" + PRIMARY_KEY + " UUID);");
-
-		ns.executeQuery("INSERT INTO m_cur SELECT " + PRIMARY_KEY + " FROM " + srcGraph.getVertexTableName() +
-				" WHERE " + PRIMARY_KEY + " IN (SELECT " + PRIMARY_KEY + " FROM m_answer);");
-
-		ns.executeQuery("DROP TABLE IF EXISTS m_answer;" +
-				"CREATE TABLE m_answer (" + PRIMARY_KEY + " UUID);" +
-				"INSERT INTO m_answer SELECT " + PRIMARY_KEY + " FROM m_cur;");
-
-
-		loopStmts =
-				"DROP TABLE IF EXISTS m_next;" + "CREATE TABLE m_next(" + PRIMARY_KEY + " UUID);" +
-						"INSERT INTO m_next SELECT MIN(\"" + PARENT_VERTEX_KEY + "\")" +
-						" FROM m_cur, m_sgconn WHERE " + PRIMARY_KEY + " = \"" + CHILD_VERTEX_KEY + "\"" +
-						" AND depth + $depth <= " + String.valueOf(maxDepth) + " GROUP BY \"" + CHILD_VERTEX_KEY +
-						"\", reaching;" + "DROP TABLE IF EXISTS m_cur;" + "CREATE TABLE m_cur(" + PRIMARY_KEY +
-						" UUID);" + "INSERT INTO m_cur SELECT " + PRIMARY_KEY + " FROM m_next WHERE " + PRIMARY_KEY +
-						" NOT IN (SELECT " + PRIMARY_KEY + " FROM m_answer);" +
-						"INSERT INTO m_answer SELECT " + PRIMARY_KEY + " FROM m_cur;";
-		for(int i = 0; i < maxDepth; ++i)
-		{
-			ns.executeQuery(loopStmts.replace("$depth", String.valueOf(i)));
-
-			String worksetSizeQuery = "COPY (SELECT COUNT(*) FROM m_cur) TO stdout;";
-			if(ns.executeQueryForLongResult(worksetSizeQuery) == 0)
-			{
-				break;
-			}
-		}
-
 		String targetVertexTable = targetGraph.getVertexTableName();
 		String targetEdgeTable = targetGraph.getEdgeTableName();
+		String subjectVertexTable = subjectGraph.getVertexTableName();
+		String subjectEdgeTable = subjectGraph.getEdgeTableName();
+		String sourceGraphName = sourceGraph.getVertexTableName();
+		String destinationGraphName = destinationGraph.getVertexTableName();
 
-		ns.executeQuery("INSERT INTO " + targetVertexTable + " SELECT " + PRIMARY_KEY + " FROM m_answer;" +
-				"INSERT INTO " + targetEdgeTable + " SELECT " + PRIMARY_KEY + " FROM " + EDGE_TABLE +
-				" WHERE \"" + CHILD_VERTEX_KEY + "\" IN (SELECT " + PRIMARY_KEY + " FROM m_answer)" +
-				" AND \"" + PARENT_VERTEX_KEY + "\" IN (SELECT " + PRIMARY_KEY + " FROM m_answer)" + filter + ";");
+		String cypherQuery = "MATCH p=shortestPath(" + VERTEX_ALIAS + ":" + sourceGraphName + ")-[*0.." + maxDepth + "]->";
+		cypherQuery += "(n" + ":" + destinationGraphName + "))";
+		cypherQuery += " WHERE ALL(node IN nodes(p) WHERE node:" + subjectVertexTable + ") ";
+		if(!Environment.IsBaseGraph(subjectGraph))
+		{
+			cypherQuery += " AND ALL(r IN relationships(p) WHERE r.quickgrail_symbol CONTAINS ',"
+					+ subjectEdgeTable + ",')";
+		}
+		cypherQuery += " WITH p UNWIND nodes(p) AS node SET node:" + targetVertexTable + " WITH p ";
+		cypherQuery += " UNWIND relationships(p) AS " + EDGE_ALIAS + " SET " + EDGE_ALIAS +
+				".quickgrail_symbol = CASE WHEN NOT EXISTS(" +
+				EDGE_ALIAS + ".quickgrail_symbol) THEN '," + targetEdgeTable + ",'" + " WHEN " +
+				EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + targetEdgeTable + ",' THEN " +
+				EDGE_ALIAS + ".quickgrail_symbol " + " ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," +
+				targetEdgeTable + ",' END";
 
-		ns.executeQuery("DROP TABLE IF EXISTS m_cur;" +
-				"DROP TABLE IF EXISTS m_next;" +
-				"DROP TABLE IF EXISTS m_answer;" +
-				"DROP TABLE IF EXISTS m_conn;" +
-				"DROP TABLE IF EXISTS m_sgconn;");
+		ns.executeQuery(cypherQuery);
 	}
 
 	@Override
@@ -195,10 +113,10 @@ public class GetShortestPath extends Instruction
 		inline_field_values.add(targetGraph.getName());
 		inline_field_names.add("subjectGraph");
 		inline_field_values.add(subjectGraph.getName());
-		inline_field_names.add("srcGraph");
-		inline_field_values.add(srcGraph.getName());
-		inline_field_names.add("dstGraph");
-		inline_field_values.add(dstGraph.getName());
+		inline_field_names.add("sourceGraph");
+		inline_field_values.add(sourceGraph.getName());
+		inline_field_names.add("destinationGraph");
+		inline_field_values.add(destinationGraph.getName());
 		inline_field_names.add("maxDepth");
 		inline_field_values.add(String.valueOf(maxDepth));
 	}

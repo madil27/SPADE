@@ -23,14 +23,11 @@ import spade.query.neo4j.entities.Graph;
 import spade.query.neo4j.kernel.Environment;
 import spade.query.neo4j.utility.TreeStringSerializable;
 import spade.storage.neo4j.Neo4jExecutor;
-import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
-import static spade.query.neo4j.utility.CommonVariables.CHILD_VERTEX_KEY;
-import static spade.query.neo4j.utility.CommonVariables.EDGE_TABLE;
-import static spade.query.neo4j.utility.CommonVariables.PARENT_VERTEX_KEY;
-import static spade.query.neo4j.utility.CommonVariables.PRIMARY_KEY;
+import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
+import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
 
 /**
  * Get the lineage of a set of vertices in a graph.
@@ -68,92 +65,45 @@ public class GetLineage extends Instruction
 	@Override
 	public void execute(Environment env, ExecutionContext ctx)
 	{
-		ArrayList<Direction> oneDirs = new ArrayList<>();
-		if(direction == Direction.kBoth)
-		{
-			oneDirs.add(Direction.kAncestor);
-			oneDirs.add(Direction.kDescendant);
-		}
-		else
-		{
-			oneDirs.add(direction);
-		}
-
 		Neo4jExecutor ns = ctx.getExecutor();
 
 		String targetVertexTable = targetGraph.getVertexTableName();
 		String targetEdgeTable = targetGraph.getEdgeTableName();
-
+		String subjectVertexTable = subjectGraph.getVertexTableName();
 		String subjectEdgeTable = subjectGraph.getEdgeTableName();
-		String filter = "";
+		String startGraphName = startGraph.getVertexTableName();
+
+		String cypherQuery = "MATCH p=(" + VERTEX_ALIAS;
+		if(direction == Direction.kAncestor || direction == Direction.kBoth)
+		{
+			cypherQuery += ":" + startGraphName;
+		}
+		cypherQuery += ")-[*0.." + depth + "]-";
+		if(direction != Direction.kBoth)
+		{
+			cypherQuery += ">";
+		}
+		cypherQuery += "(n";
+		if(direction == Direction.kDescendant)
+		{
+			cypherQuery += ":" + startGraphName;
+		}
+		cypherQuery += ")";
+		cypherQuery += " WHERE ALL(node IN nodes(p) WHERE node:" + subjectVertexTable + ") ";
 		if(!Environment.IsBaseGraph(subjectGraph))
 		{
-			filter = " AND edge." + PRIMARY_KEY + " IN (SELECT " + PRIMARY_KEY + " FROM " + subjectEdgeTable + ")";
+			cypherQuery += " AND ALL(r IN relationships(p) WHERE r.quickgrail_symbol CONTAINS ',"
+					+ subjectEdgeTable + ",')";
 		}
+		cypherQuery += " WITH p UNWIND nodes(p) AS node SET node:" + targetVertexTable + " WITH p ";
+		cypherQuery += " UNWIND relationships(p) AS " + EDGE_ALIAS + " SET " + EDGE_ALIAS +
+				".quickgrail_symbol = CASE WHEN NOT EXISTS(" +
+				EDGE_ALIAS + ".quickgrail_symbol) THEN '," + targetEdgeTable + ",'" + " WHEN " +
+				EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + targetEdgeTable + ",' THEN " +
+				EDGE_ALIAS + ".quickgrail_symbol " + " ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," +
+				targetEdgeTable + ",' END";
 
-		for(Direction oneDir : oneDirs)
-		{
-			executeOneDirection(oneDir, ns, filter);
-			ns.executeQuery("INSERT INTO " + targetVertexTable + " SELECT " + PRIMARY_KEY + " FROM m_answer;" +
-					"INSERT INTO " + targetEdgeTable + " SELECT " + PRIMARY_KEY +
-					" FROM m_answer_edge GROUP BY " + PRIMARY_KEY + ";");
-		}
-
-		ns.executeQuery("DROP TABLE IF EXISTS m_cur;" +
-				"DROP TABLE IF EXISTS m_next;" +
-				"DROP TABLE IF EXISTS m_answer;" +
-				"DROP TABLE IF EXISTS m_answer_edge;");
-	}
-
-	private void executeOneDirection(Direction dir, Neo4jExecutor ns, String filter)
-	{
-		String src, dst;
-		if(dir == Direction.kAncestor)
-		{
-			src = "\"" + CHILD_VERTEX_KEY + "\"";
-			dst = "\"" + PARENT_VERTEX_KEY + "\"";
-		}
-		else
-		{
-			assert dir == Direction.kDescendant;
-			src = "\"" + PARENT_VERTEX_KEY + "\"";
-			dst = "\"" + CHILD_VERTEX_KEY + "\"";
-		}
-
-		ns.executeQuery("DROP TABLE IF EXISTS m_cur;" +
-				"DROP TABLE IF EXISTS m_next;" +
-				"DROP TABLE IF EXISTS m_answer;" +
-				"DROP TABLE IF EXISTS m_answer_edge;" +
-				"CREATE TABLE m_cur (" + PRIMARY_KEY + " UUID);" +
-				"CREATE TABLE m_next (" + PRIMARY_KEY + " UUID);" +
-				"CREATE TABLE m_answer (" + PRIMARY_KEY + " UUID);" +
-				"CREATE TABLE m_answer_edge (" + PRIMARY_KEY + " UUID);");
-
-		String startVertexTable = startGraph.getVertexTableName();
-		ns.executeQuery("INSERT INTO m_cur SELECT " + PRIMARY_KEY + " FROM " + startVertexTable + ";" +
-				"INSERT INTO m_answer SELECT " + PRIMARY_KEY + " FROM m_cur;");
-
-		String loopStmts =
-				"DROP TABLE IF EXISTS m_next;" + "CREATE TABLE m_next (" + PRIMARY_KEY + " UUID);" +
-						"INSERT INTO m_next SELECT " + dst + " FROM " + EDGE_TABLE +
-						" WHERE " + src + " IN (SELECT " + PRIMARY_KEY + " FROM m_cur)" + filter +
-						" GROUP BY " + dst + ";" +
-						"INSERT INTO m_answer_edge SELECT " + PRIMARY_KEY + " FROM " + EDGE_TABLE +
-						" WHERE " + src + " IN (SELECT " + PRIMARY_KEY + " FROM m_cur)" + filter + ";" +
-						"DROP TABLE IF EXISTS m_cur;" + "CREATE TABLE m_cur (" + PRIMARY_KEY + " UUID);" +
-						"INSERT INTO m_cur SELECT " + PRIMARY_KEY + " FROM m_next WHERE " + PRIMARY_KEY +
-						" NOT IN (SELECT " + PRIMARY_KEY + " FROM m_answer);" +
-						"INSERT INTO m_answer SELECT " + PRIMARY_KEY + " FROM m_cur;";
-		for(int i = 0; i < depth; ++i)
-		{
-			ns.executeQuery(loopStmts);
-
-			String worksetSizeQuery = "COPY (SELECT COUNT(*) FROM m_cur) TO stdout;";
-			if(ns.executeQueryForLongResult(worksetSizeQuery) == 0)
-			{
-				break;
-			}
-		}
+		ns.executeQuery(cypherQuery);
 	}
 
 	@Override

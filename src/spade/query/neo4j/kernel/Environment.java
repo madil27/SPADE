@@ -46,10 +46,10 @@ import static spade.query.neo4j.utility.Neo4jUtil.removeDollar;
  */
 public class Environment extends TreeStringSerializable
 {
-	public final static Graph kBaseGraph = new Graph("$base");
+	private final static Graph kBaseGraph = new Graph("$base");
 	private HashMap<String, String> symbols;
 	private Neo4jExecutor executor;
-	// for querying with Neo4j storage
+	// for access in query classes
 	private static String resultGraphName;
 	private static final Logger logger = Logger.getLogger(Environment.class.getName());
 
@@ -66,7 +66,6 @@ public class Environment extends TreeStringSerializable
 			{
 				String tableName = (String) table;
 				symbols.put("$" + tableName, tableName);
-				logger.log(Level.INFO, "table: " + "$" + tableName);
 			}
 		}
 	}

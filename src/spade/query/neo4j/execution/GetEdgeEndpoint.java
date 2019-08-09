@@ -54,7 +54,7 @@ public class GetEdgeEndpoint extends Instruction
 		Neo4jExecutor ns = ctx.getExecutor();
 		String subjectEdgeTable = subjectGraph.getEdgeTableName();
 		String targetVertexTable = targetGraph.getVertexTableName();
-		String query = "MATCH (child)-[" + EDGE_ALIAS + ":" + EDGE + "]->(parent) ";
+		String query = "MATCH (child)-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->(parent) ";
 		if(!Environment.IsBaseGraph(subjectGraph))
 		{
 			query += "WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + subjectEdgeTable + ",' ";
