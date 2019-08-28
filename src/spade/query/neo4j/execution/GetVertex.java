@@ -21,6 +21,7 @@ package spade.query.neo4j.execution;
 
 import spade.query.neo4j.entities.Graph;
 import spade.query.neo4j.kernel.Environment;
+import spade.query.neo4j.utility.Neo4jUtil;
 import spade.query.neo4j.utility.TreeStringSerializable;
 import spade.storage.neo4j.Neo4jExecutor;
 
@@ -57,21 +58,17 @@ public class GetVertex extends Instruction
 		Neo4jExecutor ns = ctx.getExecutor();
 		String subjectVertexTable = subjectGraph.getVertexTableName();
 		String targetVertexTable = targetGraph.getVertexTableName();
-		String cypherQuery = "MATCH (" + VERTEX_ALIAS + ":" + subjectVertexTable + ") ";
-		if(field == null)
-		{
-			cypherQuery += " SET " + VERTEX_ALIAS + ":" + targetVertexTable;
-		}
-		else
+		String condition = "";
+		if(field != null)
 		{
 			// TODO: handle wild card columns
 			if(!field.equals("*"))
 			{
-				cypherQuery += " WHERE " + VERTEX_ALIAS + "." + field + operation;
-				cypherQuery += formatString(value, false);
-				cypherQuery += " SET " + VERTEX_ALIAS + ":" + targetVertexTable;
+				condition += "x." + field + operation;
+				condition += formatString(value, false);
 			}
 		}
+		String cypherQuery = Neo4jUtil.vertexLabelQuery(condition, subjectVertexTable, targetVertexTable);
 		ns.executeQuery(cypherQuery);
 	}
 

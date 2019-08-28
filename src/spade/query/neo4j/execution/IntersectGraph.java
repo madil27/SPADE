@@ -21,14 +21,17 @@ package spade.query.neo4j.execution;
 
 import spade.query.neo4j.entities.Graph;
 import spade.query.neo4j.kernel.Environment;
+import spade.query.neo4j.utility.Neo4jUtil;
 import spade.query.neo4j.utility.TreeStringSerializable;
 import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
 import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
+import static spade.query.neo4j.utility.CommonVariables.NodeTypes.VERTEX;
 import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
 import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
+import static spade.query.neo4j.utility.Neo4jUtil.formatSymbol;
 
 /**
  * Intersect two graphs (i.e. find common vertices and edges).
@@ -60,36 +63,29 @@ public class IntersectGraph extends Instruction
 		String rhsEdgeTable = rhsGraph.getEdgeTableName();
 
 		Neo4jExecutor ns = ctx.getExecutor();
-		String cypherQuery = "MATCH (" + VERTEX_ALIAS + ":" + lhsVertexTable + ":" + rhsVertexTable + ") " +
-				" SET " + VERTEX_ALIAS + ":" + outputVertexTable;
+		String condition = "x:" + lhsVertexTable + ":" + rhsVertexTable;
+		String cypherQuery = Neo4jUtil.vertexLabelQuery(condition, VERTEX.toString(), outputVertexTable);
 
 		// allows execution of multiple queries in one statement
 		cypherQuery += " WITH count(*) as dummy \n";
 
 		cypherQuery += "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->() ";
+		condition = "";
 		boolean isBase = false;
 		if(!Environment.IsBaseGraph(lhsGraph))
 		{
-			cypherQuery += " WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + lhsEdgeTable + ",'";
+			condition += " x.quickgrail_symbol CONTAINS " + formatSymbol(lhsEdgeTable);
 			isBase = true;
 		}
 		if(!Environment.IsBaseGraph(rhsGraph))
 		{
 			if(isBase)
 			{
-				cypherQuery += " AND ";
+				condition += " AND ";
 			}
-			else
-			{
-				cypherQuery += " WHERE ";
-			}
-			cypherQuery += EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + rhsEdgeTable + ",'";
+			condition += " x.quickgrail_symbol CONTAINS " + formatSymbol(rhsEdgeTable);
 		}
-		cypherQuery += " SET " + EDGE_ALIAS + ".quickgrail_symbol = CASE WHEN NOT EXISTS(" + EDGE_ALIAS +
-				".quickgrail_symbol) THEN '," + outputEdgeTable + ",'" +
-				" WHEN " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," +
-				outputEdgeTable + ",' THEN " + EDGE_ALIAS + ".quickgrail_symbol " +
-				" ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," + outputEdgeTable + ",' END";
+		cypherQuery += Neo4jUtil.edgeSymbolQuery(condition, outputEdgeTable);
 
 		ns.executeQuery(cypherQuery);
 	}

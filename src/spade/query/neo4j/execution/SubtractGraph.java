@@ -21,12 +21,15 @@ package spade.query.neo4j.execution;
 
 import spade.query.neo4j.entities.Graph;
 import spade.query.neo4j.kernel.Environment;
+import spade.query.neo4j.utility.Neo4jUtil;
 import spade.query.neo4j.utility.TreeStringSerializable;
+import spade.storage.kafka.Vertex;
 import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
 import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
+import static spade.query.neo4j.utility.CommonVariables.NodeTypes.VERTEX;
 import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
 import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
 
@@ -66,24 +69,32 @@ public class SubtractGraph extends Instruction
 		String cypherQuery = "";
 		if(component == null || component == Graph.Component.kVertex)
 		{
-			cypherQuery += "MATCH (" + VERTEX_ALIAS + ") WHERE " +
-					VERTEX_ALIAS + ":" + minuendVertexTable +
-					" AND NOT " + VERTEX_ALIAS + ":" + subtrahendVertexTable +
-					" SET " + VERTEX_ALIAS + ":" + outputVertexTable;
-			// allows execution of multiple queries in one statement
+			String condition = "x:" + minuendVertexTable +
+					" AND NOT x:" + subtrahendVertexTable;
+			cypherQuery = Neo4jUtil.vertexLabelQuery(condition, VERTEX.toString(), outputVertexTable);
+			// allows execution of multiple MATCH queries in one statement
 			cypherQuery += " WITH count(*) as dummy \n";
 		}
 		if(component == null || component == Graph.Component.kEdge)
 		{
-			cypherQuery += "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->() " +
-					" WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + minuendEdgeTable +
-					",' AND NOT " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + subtrahendEdgeTable +
-					",' SET " + EDGE_ALIAS + ".quickgrail_symbol = CASE WHEN NOT EXISTS(" + EDGE_ALIAS +
-					".quickgrail_symbol) THEN '," + outputEdgeTable + ",'" +
-					" WHEN " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," +
-					outputEdgeTable + ",' THEN " + EDGE_ALIAS + ".quickgrail_symbol " +
-					" ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," + outputEdgeTable + ",' END";
-
+			String condition = "";
+			if(Environment.IsBaseGraph(minuendGraph))
+			{
+				condition += " TRUE ";
+			}
+			else
+			{
+				condition += " x.quickgrail_symbol CONTAINS " + Neo4jUtil.formatSymbol(minuendEdgeTable);
+			}
+			if(Environment.IsBaseGraph(subtrahendGraph))
+			{
+				condition += " AND FALSE";
+			}
+			else
+			{
+				condition += " AND NOT x.quickgrail_symbol CONTAINS " + Neo4jUtil.formatSymbol(subtrahendEdgeTable);
+			}
+			cypherQuery += Neo4jUtil.edgeSymbolQuery(condition, outputEdgeTable);
 		}
 		ns.executeQuery(cypherQuery);
 	}

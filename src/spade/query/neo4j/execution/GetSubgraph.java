@@ -28,9 +28,12 @@ import spade.storage.neo4j.Neo4jExecutor;
 import java.util.ArrayList;
 
 import static spade.query.neo4j.utility.CommonVariables.CHILD_VERTEX_KEY;
+import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
 import static spade.query.neo4j.utility.CommonVariables.EDGE_TABLE;
 import static spade.query.neo4j.utility.CommonVariables.PARENT_VERTEX_KEY;
 import static spade.query.neo4j.utility.CommonVariables.PRIMARY_KEY;
+import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
+import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
 
 /**
  * Let $S be the subject graph and $T be the skeleton graph.
@@ -54,36 +57,22 @@ public class GetSubgraph extends Instruction
 	public void execute(Environment env, ExecutionContext ctx)
 	{
 		Neo4jExecutor ns = ctx.getExecutor();
-
 		String targetVertexTable = targetGraph.getVertexTableName();
 		String targetEdgeTable = targetGraph.getEdgeTableName();
 		String subjectVertexTable = subjectGraph.getVertexTableName();
-		String subjectEdgeTable = subjectGraph.getEdgeTableName();
 		String skeletonVertexTable = skeletonGraph.getVertexTableName();
-		String skeletonEdgeTable = skeletonGraph.getEdgeTableName();
 
-		ns.executeQuery("DROP TABLE IF EXISTS m_answer;" + "CREATE TABLE m_answer (" + PRIMARY_KEY + " UUID);");
+		String cypherQuery = "MATCH (" + VERTEX_ALIAS + ":" + subjectVertexTable + ":" + skeletonVertexTable + ")" +
+				"-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]-" +
+				"(n:" + subjectVertexTable + ":" + skeletonVertexTable + ")" +
+				" SET " + VERTEX_ALIAS + ":" + targetVertexTable +
 
-		// Get vertices.
-		ns.executeQuery("INSERT INTO m_answer SELECT " + PRIMARY_KEY + " FROM " + skeletonVertexTable +
-				" WHERE " + PRIMARY_KEY + " IN (SELECT " + PRIMARY_KEY + " FROM " + subjectVertexTable + ");" +
-				"INSERT INTO m_answer SELECT \"" + CHILD_VERTEX_KEY + "\" FROM " + EDGE_TABLE +
-				" WHERE " + PRIMARY_KEY + " IN (SELECT " + PRIMARY_KEY + " FROM " + skeletonEdgeTable + ")" +
-				" AND \"" + CHILD_VERTEX_KEY + "\" IN (SELECT " + PRIMARY_KEY + " FROM " + subjectVertexTable + ");" +
-				"INSERT INTO m_answer SELECT \"" + PARENT_VERTEX_KEY + "\" FROM " + EDGE_TABLE +
-				" WHERE " + PRIMARY_KEY + " IN (SELECT " + PRIMARY_KEY + " FROM " + skeletonEdgeTable + ")" +
-				" AND \"" + PARENT_VERTEX_KEY + "\" IN (SELECT " + PRIMARY_KEY + " FROM " + subjectVertexTable + ");" +
-				"INSERT INTO " + targetVertexTable + " SELECT " + PRIMARY_KEY + " FROM m_answer GROUP BY " +
-				PRIMARY_KEY + " ;");
-
-		// Get edges.
-		ns.executeQuery("INSERT INTO " + targetEdgeTable +
-				" SELECT s." + PRIMARY_KEY + " FROM " + subjectEdgeTable + " s, " + EDGE_TABLE + " e" +
-				" WHERE s." + PRIMARY_KEY + " = e." + PRIMARY_KEY + " AND e.\"" + CHILD_VERTEX_KEY + "\" IN (SELECT " + PRIMARY_KEY +
-				" FROM m_answer)" +
-				" AND e.\"" + PARENT_VERTEX_KEY + "\" IN (SELECT " + PRIMARY_KEY + " FROM m_answer) GROUP BY s." + PRIMARY_KEY + " ;");
-
-		ns.executeQuery("DROP TABLE IF EXISTS m_answer;");
+				" SET " + EDGE_ALIAS + ".quickgrail_symbol = CASE WHEN NOT EXISTS(" + EDGE_ALIAS +
+				".quickgrail_symbol) THEN '," + targetEdgeTable + ",'" +
+				" WHEN " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," +
+				targetEdgeTable + ",' THEN " + EDGE_ALIAS + ".quickgrail_symbol " +
+				" ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," + targetEdgeTable + ",' END";
+		ns.executeQuery(cypherQuery);
 	}
 
 	@Override

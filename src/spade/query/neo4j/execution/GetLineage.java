@@ -28,6 +28,7 @@ import java.util.ArrayList;
 
 import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
 import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
+import static spade.query.neo4j.utility.Neo4jUtil.formatSymbol;
 
 /**
  * Get the lineage of a set of vertices in a graph.
@@ -92,8 +93,8 @@ public class GetLineage extends Instruction
 		cypherQuery += " WHERE ALL(node IN nodes(p) WHERE node:" + subjectVertexTable + ") ";
 		if(!Environment.IsBaseGraph(subjectGraph))
 		{
-			cypherQuery += " AND ALL(r IN relationships(p) WHERE r.quickgrail_symbol CONTAINS ',"
-					+ subjectEdgeTable + ",')";
+			cypherQuery += " AND ALL(r IN relationships(p) WHERE r.quickgrail_symbol CONTAINS " +
+					formatSymbol(subjectEdgeTable) + ")";
 		}
 		cypherQuery += " WITH p UNWIND nodes(p) AS node SET node:" + targetVertexTable + " WITH p ";
 		cypherQuery += " UNWIND relationships(p) AS " + EDGE_ALIAS + " SET " + EDGE_ALIAS +

@@ -21,14 +21,17 @@ package spade.query.neo4j.execution;
 
 import spade.query.neo4j.entities.Graph;
 import spade.query.neo4j.kernel.Environment;
+import spade.query.neo4j.utility.Neo4jUtil;
 import spade.query.neo4j.utility.TreeStringSerializable;
 import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
 import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
+import static spade.query.neo4j.utility.CommonVariables.NodeTypes.VERTEX;
 import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
 import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
+import static spade.query.neo4j.utility.Neo4jUtil.formatSymbol;
 
 /**
  * Union one graph into the other.
@@ -57,26 +60,33 @@ public class UnionGraph extends Instruction
 
 		Neo4jExecutor ns = ctx.getExecutor();
 		// union vertices
-		String cypherQuery = "MATCH (" + VERTEX_ALIAS + ":" + sourceVertexTable + ") SET " +
-				VERTEX_ALIAS + ":" + targetVertexTable;
+		String condition = " x: " + sourceVertexTable;
+		String cypherQuery = Neo4jUtil.vertexLabelQuery(condition, VERTEX.toString(), targetVertexTable);
 
 		// allows execution of multiple queries in one statement
 		cypherQuery += " WITH count(*) as dummy \n";
 
 		cypherQuery += "MATCH (child:" + sourceVertexTable + ")-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->(parent:" +
-				sourceVertexTable + ") ";
+				sourceVertexTable + ") SET child:" + targetVertexTable + " SET parent:" + targetVertexTable;
+
 		if(!Environment.IsBaseGraph(sourceGraph))
 		{
-			cypherQuery += " WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + sourceEdgeTable + ",'";
+			condition = " x.quickgrail_symbol CONTAINS " + formatSymbol(sourceEdgeTable);
 		}
-		// add vertex label
-		cypherQuery += " SET child:" + targetVertexTable + " SET parent:" + targetVertexTable;
+		String addSymbol = " SET a.quickgrail_symbol = CASE WHEN NOT EXISTS(a.quickgrail_symbol) THEN " +
+				formatSymbol(targetEdgeTable) + " WHEN a.quickgrail_symbol CONTAINS " +
+				formatSymbol(targetEdgeTable) + " THEN a.quickgrail_symbol ELSE a.quickgrail_symbol + " +
+				formatSymbol(targetEdgeTable) + " END";
+		String removeSymbol = "SET d.quickgrail_symbol = " +
+				"replace(d.quickgrail_symbol, " + formatSymbol(targetEdgeTable) + ", '')";
+
 		// add edge label
-		cypherQuery += " SET " + EDGE_ALIAS + ".quickgrail_symbol = CASE WHEN NOT EXISTS(" + EDGE_ALIAS +
-				".quickgrail_symbol) THEN '," + targetEdgeTable + ",'" +
-				" WHEN " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," +
-				targetEdgeTable + ",' THEN " + EDGE_ALIAS + ".quickgrail_symbol " +
-				" ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," + targetEdgeTable + ",' END";
+		cypherQuery += " WITH REDUCE(s = {a:[], d:[]}, x IN COLLECT(" + EDGE_ALIAS + ") | " +
+				" CASE  WHEN " + condition + " THEN {a: s.a+x, d: s.d} " +
+				" WHEN x.quickgrail_symbol CONTAINS " + formatSymbol(targetEdgeTable) + " THEN {a: s.a, d: s.d+x} " +
+				" ELSE {a:s.a, d:s.d} END) AS actions " +
+				" FOREACH (d IN actions.d | " + removeSymbol + ")" +
+				" FOREACH(a IN actions.a | " + addSymbol + ")";
 
 		ns.executeQuery(cypherQuery);
 	}

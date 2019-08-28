@@ -28,9 +28,12 @@ import spade.storage.neo4j.Neo4jExecutor;
 import java.util.ArrayList;
 
 import static spade.query.neo4j.utility.CommonVariables.CHILD_VERTEX_KEY;
+import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
 import static spade.query.neo4j.utility.CommonVariables.EDGE_TABLE;
 import static spade.query.neo4j.utility.CommonVariables.PARENT_VERTEX_KEY;
 import static spade.query.neo4j.utility.CommonVariables.PRIMARY_KEY;
+import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
+import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
 
 /**
  * Collapse all edges whose specified fields are the same.
@@ -60,21 +63,32 @@ public class CollapseEdge extends Instruction
 		String targetEdgeTable = targetGraph.getEdgeTableName();
 
 		Neo4jExecutor ns = ctx.getExecutor();
-		ns.executeQuery("INSERT INTO " + targetVertexTable +
-				" SELECT " + PRIMARY_KEY + " FROM " + sourceVertexTable + ";");
-
-		StringBuilder groups = new StringBuilder();
-
-		for(int i = 0; i < fields.size(); ++i)
+		String cypherQuery = "MATCH (" + VERTEX_ALIAS + ":" + sourceVertexTable + ")-[edge:" + EDGE.toString() +
+				"]->(n" + ":" + sourceVertexTable + ") ";
+		if(!Environment.IsBaseGraph(sourceGraph))
 		{
-			groups.append(", \"" + fields.get(i) + "\"");
+			cypherQuery += " WHERE edge.quickgrail_symbol CONTAINS '," + sourceEdgeTable + ",'";
 		}
+		cypherQuery += " SET " + VERTEX_ALIAS + ":" + targetVertexTable +
+				" SET n:" + targetVertexTable;
+		cypherQuery += " WITH head(collect(edge)) AS " + EDGE_ALIAS;
 
+		StringBuilder groups = new StringBuilder(20);
+		for(String field : fields)
+		{
+			groups.append(", edge.");
+			groups.append(field);
+			groups.append(" AS ");
+			groups.append(field);
+		}
+		cypherQuery += groups;
+		cypherQuery += " SET " + EDGE_ALIAS + ".quickgrail_symbol = CASE WHEN NOT EXISTS(" + EDGE_ALIAS +
+				".quickgrail_symbol) THEN '," + targetEdgeTable + ",'" +
+				" WHEN " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," +
+				targetEdgeTable + ",' THEN " + EDGE_ALIAS + ".quickgrail_symbol " +
+				" ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," + targetEdgeTable + ",' END";
 
-		ns.executeQuery("INSERT INTO " + targetEdgeTable +
-				" SELECT MIN(e." + PRIMARY_KEY + ") FROM " + EDGE_TABLE + " e" +
-				" WHERE e." + PRIMARY_KEY + " IN (SELECT " + PRIMARY_KEY + " FROM " + sourceEdgeTable + ")" +
-				" GROUP BY \"" + CHILD_VERTEX_KEY + "\", \"" + PARENT_VERTEX_KEY + "\"" + groups.toString() + ";");
+		ns.executeQuery(cypherQuery);
 	}
 
 	// quickstep
@@ -88,7 +102,12 @@ public class CollapseEdge extends Instruction
 	// INSERT INTO targetEdgeTable
 	// SELECT MIN(e.hash) FROM edge e
 	// WHERE e.id IN (SELECT id FROM sourceEdgeTable)
-	// GROUP BY src, dst, field1, field2
+	// GROUP BY src, dst, field1, field2, ..., fieldn
+
+	// neo4j
+	// MATCH (v)-[e]->(n)
+	// WITH head(collect(e)) as edge, e.field1 as field1, e.field2 as field2, ...
+	// RETURN edge, field1, field2, ...
 
 	@Override
 	public String getLabel()

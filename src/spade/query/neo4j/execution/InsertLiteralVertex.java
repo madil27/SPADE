@@ -28,6 +28,8 @@ import spade.storage.neo4j.Neo4jExecutor;
 import java.util.ArrayList;
 
 /**
+ * NOT SUPPORTED BY NEO4J
+ * TODO: Support execution of general cypher query
  * Insert a list of vertices into a graph by hash.
  */
 public class InsertLiteralVertex extends Instruction
@@ -46,14 +48,6 @@ public class InsertLiteralVertex extends Instruction
 	@Override
 	public void execute(Environment env, ExecutionContext ctx)
 	{
-		Neo4jExecutor ns = ctx.getExecutor();
-		String prefix = "INSERT INTO " + targetGraph.getVertexTableName() + " VALUES(";
-		StringBuilder sqlQuery = new StringBuilder();
-		for(String vertex : vertices)
-		{
-			sqlQuery.append(prefix + vertex + ");");
-		}
-		ns.executeQuery(sqlQuery.toString());
 	}
 
 	@Override

@@ -192,4 +192,42 @@ public class Neo4jUtil
 		}
 		return str;
 	}
+
+	public static String vertexLabelQuery(String condition, String subjectVertexTable, String targetVertexTable)
+	{
+		String cypherQuery = "MATCH (" + VERTEX_ALIAS + ":" + subjectVertexTable + ") " +
+				" WITH REDUCE(s = {a:[], d:[]}, x IN COLLECT(" + VERTEX_ALIAS + ") | " +
+				" CASE  WHEN " + condition + " THEN {a: s.a+x, d: s.d} " +
+				" WHEN '" + targetVertexTable + "' IN labels(x) THEN {a: s.a, d: s.d+x} " +
+				" ELSE {a:s.a, d:s.d} END) AS actions " +
+				" FOREACH (d IN actions.d | REMOVE d:" + targetVertexTable + ")" +
+				" FOREACH(a IN actions.a | SET a:" + targetVertexTable + ")";
+
+		return cypherQuery;
+	}
+
+	public static String edgeSymbolQuery(String condition, String targetEdgeTable)
+	{
+		String addSymbol = " SET a.quickgrail_symbol = CASE WHEN NOT EXISTS(a.quickgrail_symbol) THEN " +
+				formatSymbol(targetEdgeTable) + " WHEN a.quickgrail_symbol CONTAINS " +
+				formatSymbol(targetEdgeTable) + " THEN a.quickgrail_symbol ELSE a.quickgrail_symbol + " +
+				formatSymbol(targetEdgeTable) + " END";
+		String removeSymbol = "SET d.quickgrail_symbol = " +
+				"replace(d.quickgrail_symbol, " + formatSymbol(targetEdgeTable) + ", '')";
+
+		String cypherQuery = "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->() " +
+				" WITH REDUCE(s = {a:[], d:[]}, x IN COLLECT(" + EDGE_ALIAS + ") | " +
+				" CASE  WHEN " + condition + " THEN {a: s.a+x, d: s.d} " +
+				" WHEN x.quickgrail_symbol CONTAINS " + formatSymbol(targetEdgeTable) + " THEN {a: s.a, d: s.d+x} " +
+				" ELSE {a:s.a, d:s.d} END) AS actions " +
+				" FOREACH (d IN actions.d | " + removeSymbol + ")" +
+				" FOREACH(a IN actions.a | " + addSymbol + ")";
+
+		return cypherQuery;
+	}
+
+	public static String formatSymbol(String symbol)
+	{
+		return "'," + symbol + ",'";
+	}
 }

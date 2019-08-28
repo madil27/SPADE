@@ -21,6 +21,7 @@ package spade.query.neo4j.execution;
 
 import spade.query.neo4j.entities.Graph;
 import spade.query.neo4j.kernel.Environment;
+import spade.query.neo4j.utility.Neo4jUtil;
 import spade.query.neo4j.utility.TreeStringSerializable;
 import spade.storage.neo4j.Neo4jExecutor;
 
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import static spade.query.neo4j.kernel.Resolver.formatString;
 import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
 import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
+import static spade.query.neo4j.utility.Neo4jUtil.formatSymbol;
 
 /**
  * Get the a set of edges in a graph.
@@ -59,38 +61,31 @@ public class GetEdge extends Instruction
 		String subjectEdgeTable = subjectGraph.getEdgeTableName();
 		String targetEdgeTable = targetGraph.getEdgeTableName();
 
-		String cypherQuery = "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]->() ";
+		String condition = "";
 		if(!Environment.IsBaseGraph(subjectGraph))
 		{
-			cypherQuery += " WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," + subjectEdgeTable + ",' ";
+			condition += " x.quickgrail_symbol CONTAINS " + formatSymbol(subjectEdgeTable);
 			if(field != null)
 			{
 				// TODO: handle wild card columns
 				if(!field.equals("*"))
 				{
-					cypherQuery += " AND " + EDGE_ALIAS + "." + field + operation + formatString(value, false);
+					condition += " AND x." + field + operation + formatString(value, false);
 				}
-
 			}
 		}
 		else
 		{
 			if(field != null)
 			{
-				// TODO: handle wild card columns
 				if(!field.equals("*"))
 				{
-					cypherQuery += " WHERE " + EDGE_ALIAS + "." + field + operation + formatString(value, false);
+					condition += " x." + field + operation + formatString(value, false);
 				}
 
 			}
 		}
-		cypherQuery += " SET " + EDGE_ALIAS + ".quickgrail_symbol = CASE WHEN NOT EXISTS(" + EDGE_ALIAS +
-				".quickgrail_symbol) THEN '," + targetEdgeTable + ",'" +
-				" WHEN " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS '," +
-				targetEdgeTable + ",' THEN " + EDGE_ALIAS + ".quickgrail_symbol " +
-				" ELSE " + EDGE_ALIAS + ".quickgrail_symbol + '," + targetEdgeTable + ",' END";
-
+		String cypherQuery = Neo4jUtil.edgeSymbolQuery(condition, targetEdgeTable);
 		ns.executeQuery(cypherQuery);
 	}
 

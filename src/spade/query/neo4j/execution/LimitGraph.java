@@ -27,7 +27,12 @@ import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
+import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
+import static spade.query.neo4j.utility.CommonVariables.NodeTypes.VERTEX;
 import static spade.query.neo4j.utility.CommonVariables.PRIMARY_KEY;
+import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
+import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
+import static spade.query.neo4j.utility.Neo4jUtil.formatSymbol;
 
 /**
  * Sample a subset of vertices / edges from a graph.
@@ -52,28 +57,49 @@ public class LimitGraph extends Instruction
 	public void execute(Environment env, ExecutionContext ctx)
 	{
 		Neo4jExecutor ns = ctx.getExecutor();
-
 		String sourceVertexTable = sourceGraph.getVertexTableName();
 		String sourceEdgeTable = sourceGraph.getEdgeTableName();
+		String targetVertexTable = targetGraph.getVertexTableName();
+		String targetEdgeTable = targetGraph.getEdgeTableName();
 
-		long numVertices = ns.executeQueryForLongResult(
-				"COPY (SELECT COUNT(*) FROM " + sourceVertexTable + ") TO stdout;");
-		long numEdges = ns.executeQueryForLongResult(
-				"COPY (SELECT COUNT(*) FROM " + sourceEdgeTable + ") TO stdout;");
+		String cypherQuery = "MATCH (" + VERTEX_ALIAS + ":" + sourceVertexTable + ") WITH DISTINCT " + VERTEX_ALIAS +
+				" LIMIT " + limit + " WITH collect(" + VERTEX_ALIAS + ") AS nodes" +
+				" MATCH (n:" + VERTEX.toString() + ")" +
+				" WITH REDUCE(s = {a:[], d:[]}, x IN COLLECT(n) | " +
+				" CASE  WHEN x IN nodes THEN {a: s.a+x, d: s.d} " +
+				" WHEN '" + targetVertexTable + "' IN labels(x) THEN {a: s.a, d: s.d+x} " +
+				" ELSE {a:s.a, d:s.d} END) AS actions, nodes " +
+				" FOREACH (d IN actions.d | REMOVE d:" + targetVertexTable + ")" +
+				" FOREACH(a IN actions.a | SET a:" + targetVertexTable + ")";
 
-		if(numVertices > 0)
+		// allows execution of multiple queries in one statement
+		cypherQuery += " WITH count(*) as dummy \n";
+
+		String addSymbol = " SET a.quickgrail_symbol = CASE WHEN NOT EXISTS(a.quickgrail_symbol) THEN " +
+				formatSymbol(targetEdgeTable) + " WHEN a.quickgrail_symbol CONTAINS " +
+				formatSymbol(targetEdgeTable) + " THEN a.quickgrail_symbol ELSE a.quickgrail_symbol + " +
+				formatSymbol(targetEdgeTable) + " END";
+		String removeSymbol = "SET d.quickgrail_symbol = " +
+				"replace(d.quickgrail_symbol, " + formatSymbol(targetEdgeTable) + ", '')";
+
+		String condition = "";
+		if(!Environment.IsBaseGraph(sourceGraph))
 		{
-			ns.executeQuery("INSERT INTO " + targetGraph.getVertexTableName() +
-					" SELECT " + PRIMARY_KEY + " FROM " + sourceVertexTable + " GROUP BY " + PRIMARY_KEY +
-					" LIMIT " + limit + ";");
+			condition = " WHERE " + EDGE_ALIAS + ".quickgrail_symbol CONTAINS " + formatSymbol(sourceEdgeTable);
+		}
+		cypherQuery += "MATCH ()-[" + EDGE_ALIAS + ":" + EDGE.toString() + "]-() " +
+				condition +
+				" WITH DISTINCT " + EDGE_ALIAS + " LIMIT " + limit +
+				" WITH collect(e) AS edges " +
+				" MATCH ()-[n]->()" +
+				" WITH REDUCE(s = {a:[], d:[]}, x IN COLLECT(n) | " +
+				" CASE  WHEN x IN edges THEN {a: s.a+x, d: s.d} " +
+				" WHEN x.quickgrail_symbol CONTAINS " + formatSymbol(targetEdgeTable) + " THEN {a: s.a, d: s.d+x} " +
+				" ELSE {a:s.a, d:s.d} END) AS actions, edges " +
+				" FOREACH (d IN actions.d | " + removeSymbol + ")" +
+				" FOREACH(a IN actions.a | " + addSymbol + ")";
 
-		}
-		if(numEdges > 0)
-		{
-			ns.executeQuery("INSERT INTO " + targetGraph.getEdgeTableName() +
-					" SELECT " + PRIMARY_KEY + " FROM " + sourceEdgeTable + " GROUP BY " + PRIMARY_KEY +
-					" LIMIT " + limit + ";");
-		}
+		ns.executeQuery(cypherQuery);
 	}
 
 	@Override
