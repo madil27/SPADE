@@ -19,6 +19,8 @@
  */
 package spade.query.quickstep.kernel;
 
+import spade.core.AbstractQuery;
+import spade.core.AbstractStorage;
 import spade.query.quickstep.entities.Entity;
 import spade.query.quickstep.entities.EntityType;
 import spade.query.quickstep.entities.Graph;
@@ -30,12 +32,14 @@ import spade.query.quickstep.execution.DistinctifyGraph;
 import spade.query.quickstep.execution.EraseSymbols;
 import spade.query.quickstep.execution.EvaluateQuery;
 import spade.query.quickstep.execution.ExportGraph;
+import spade.query.quickstep.execution.GetEdge;
 import spade.query.quickstep.execution.GetEdgeEndpoint;
 import spade.query.quickstep.execution.GetLineage;
 import spade.query.quickstep.execution.GetLink;
 import spade.query.quickstep.execution.GetPath;
 import spade.query.quickstep.execution.GetShortestPath;
 import spade.query.quickstep.execution.GetSubgraph;
+import spade.query.quickstep.execution.GetVertex;
 import spade.query.quickstep.execution.InsertLiteralEdge;
 import spade.query.quickstep.execution.InsertLiteralVertex;
 import spade.query.quickstep.execution.Instruction;
@@ -63,6 +67,8 @@ import spade.query.quickstep.types.TypeID;
 import spade.query.quickstep.types.TypedValue;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,8 +77,18 @@ import java.util.regex.Pattern;
  */
 public class Resolver
 {
+	private static final Logger logger = Logger.getLogger(Resolver.class.getName());
 	private ArrayList<Instruction> instructions;
-	private spade.query.quickstep.kernel.Environment env;
+	private Environment env;
+	private AbstractStorage currentStorage;
+	private String currentStorageName;
+
+	public Resolver()
+	{
+		this.currentStorage = AbstractQuery.getCurrentStorage();
+		this.currentStorageName = this.currentStorage.getClass().getSimpleName();
+	}
+
 
 	private static Graph ToGraph(Entity entity)
 	{
@@ -91,6 +107,7 @@ public class Resolver
 
 	private static GraphMetadata ToGraphMetadata(Entity entity)
 	{
+		logger.log(Level.SEVERE, "GraphMetadata operations are not supported.");
 		if(entity == null)
 		{
 			return null;
@@ -109,11 +126,10 @@ public class Resolver
 	 * QuickGrail queries) into a low-level program (a list of primitive
 	 * instructions ready to be executed).
 	 */
-	public spade.query.quickstep.kernel.Program resolveProgram(ParseProgram parseProgram,
-															   spade.query.quickstep.kernel.Environment env)
+	public Program resolveProgram(ParseProgram parseProgram, Environment env)
 	{
 		// Initialize
-		this.instructions = new ArrayList<Instruction>();
+		this.instructions = new ArrayList<>();
 		this.env = env;
 
 		// Resolve statements.
@@ -122,7 +138,7 @@ public class Resolver
 			resolveStatement(parseStatement);
 		}
 
-		spade.query.quickstep.kernel.Program program = new Program(instructions, env);
+		Program program = new Program(instructions, env);
 
 		// Cleanup and return.
 		this.instructions = null;
@@ -141,9 +157,8 @@ public class Resolver
 				resolveCommand((ParseCommand) parseStatement);
 				break;
 			default:
-				throw new RuntimeException(
-						"Unsupported statement type: " +
-								parseStatement.getStatementType().name());
+				String msg = "Unsupported statement type: " + parseStatement.getStatementType().name();
+				throw new RuntimeException(msg);
 		}
 	}
 
@@ -173,6 +188,17 @@ public class Resolver
 		ParseAssignment.AssignmentType atype = parseAssignment.getAssignmentType();
 
 		Graph resultGraph;
+		// this is done in order to propagate the resulting label/variable
+		// to the Neo4j query classes for adding to the nodes and relationships
+		if(currentStorageName.equalsIgnoreCase("Neo4j"))
+		{
+			String lhs = var.getValue();
+			if(lhs.equals("$base"))
+			{
+				throw new RuntimeException("Cannot reassign reserved variables.");
+			}
+			env.setResultGraphName(lhs);
+		}
 		if(atype == ParseAssignment.AssignmentType.kEqual)
 		{
 			resultGraph = resolveGraphExpression(rhs, null, true);
@@ -191,7 +217,7 @@ public class Resolver
 			{
 				case kPlusEqual:
 				{
-					if(!spade.query.quickstep.kernel.Environment.IsBaseGraph(lhsGraph))
+					if(!Environment.IsBaseGraph(lhsGraph))
 					{
 						resultGraph = lhsGraph;
 					}
@@ -231,41 +257,7 @@ public class Resolver
 
 	private void resolveGraphMetadataAssignment(ParseAssignment parseAssignment)
 	{
-		assert parseAssignment.getLhs().getType().getTypeID() == TypeID.kGraphMetadata;
-		ParseString var = parseAssignment.getLhs().getName();
-		ParseExpression rhs = parseAssignment.getRhs();
-		ParseAssignment.AssignmentType atype = parseAssignment.getAssignmentType();
-
-		GraphMetadata resultMetadata;
-		if(atype == ParseAssignment.AssignmentType.kEqual)
-		{
-			resultMetadata = resolveGraphMetadataExpression(rhs, null);
-		}
-		else
-		{
-			String lhsMetadataName = env.lookup(var.getValue());
-			if(lhsMetadataName == null)
-			{
-				throw new RuntimeException(
-						"Cannot resolve GraphMetadata variable " + var.getValue() +
-								" at " + var.getLocationString());
-			}
-			GraphMetadata lhsGraph = new GraphMetadata(lhsMetadataName);
-			switch(atype)
-			{
-				case kPlusEqual:
-				{
-					resultMetadata = resolveGraphMetadataExpression(rhs, lhsGraph);
-					break;
-				}
-				default:
-					throw new RuntimeException(
-							"Unsupported assignment " +
-									parseAssignment.getAssignmentType().name().substring(1) +
-									" at " + parseAssignment.getLocationString());
-			}
-		}
-		env.setValue(var.getValue(), resultMetadata.getName());
+		logger.log(Level.SEVERE, "GraphMetadata operations are not supported.");
 	}
 
 	private void resolveCommand(ParseCommand parseCommand)
@@ -310,7 +302,7 @@ public class Resolver
 		boolean force = false;
 		int idx = 0;
 		ParseExpression expression = arguments.get(idx);
-		if(expression.getExpressionType() == ParseExpression.ExpressionType.kName)
+		if(expression.getExpressionType() == ExpressionType.kName)
 		{
 			String forceStr = ((ParseName) expression).getName().getValue();
 			if(forceStr.equalsIgnoreCase("force"))
@@ -319,14 +311,11 @@ public class Resolver
 			}
 			else
 			{
-				throw new RuntimeException(
-						"Invalid argument for dump: " + forceStr);
-
+				throw new RuntimeException("Invalid argument for dump: " + forceStr);
 			}
 			if(++idx >= arguments.size())
 			{
-				throw new RuntimeException(
-						"Invalid arguments for dump: expected 1 graph argument");
+				throw new RuntimeException("Invalid arguments for dump: expected 1 graph argument");
 			}
 			expression = arguments.get(idx);
 		}
@@ -346,7 +335,7 @@ public class Resolver
 		boolean force = false;
 		int idx = 0;
 		ParseExpression expression = arguments.get(idx);
-		if(expression.getExpressionType() == ParseExpression.ExpressionType.kName)
+		if(expression.getExpressionType() == ExpressionType.kName)
 		{
 			String forceStr = ((ParseName) expression).getName().getValue();
 			if(forceStr.equalsIgnoreCase("force"))
@@ -355,8 +344,7 @@ public class Resolver
 			}
 			else
 			{
-				throw new RuntimeException(
-						"Invalid argument for visualize: " + forceStr);
+				throw new RuntimeException("Invalid argument for visualize: " + forceStr);
 			}
 			expression = arguments.get(++idx);
 		}
@@ -369,8 +357,7 @@ public class Resolver
 	{
 		if(arguments.size() != 1)
 		{
-			throw new RuntimeException(
-					"Invalid number of arguments for stat: expected 1");
+			throw new RuntimeException("Invalid number of arguments for stat: expected 1");
 		}
 
 		Graph targetGraph = resolveGraphExpression(arguments.get(0), null, true);
@@ -392,7 +379,7 @@ public class Resolver
 
 	private void resolveEraseCommand(ArrayList<ParseExpression> arguments)
 	{
-		ArrayList<String> symbols = new ArrayList<String>();
+		ArrayList<String> symbols = new ArrayList<>();
 		for(ParseExpression argument : arguments)
 		{
 			if(argument.getExpressionType() != ExpressionType.kVariable)
@@ -444,6 +431,7 @@ public class Resolver
 	private GraphMetadata resolveGraphMetadataExpression(ParseExpression parseExpression,
 														 GraphMetadata outputMetadata)
 	{
+		logger.log(Level.SEVERE, "GraphMetadata operations are not supported.");
 		return ToGraphMetadata(resolveExpression(parseExpression, outputMetadata, true));
 	}
 
@@ -538,10 +526,10 @@ public class Resolver
 		switch(methodName.getValue())
 		{
 			case "getVertex":
-				return resolveGetVertexOrEdge(Graph.Component.kVertex, subject, arguments, ToGraph(outputEntity));
+				return resolveGetVertex(Graph.Component.kVertex, subject, arguments, ToGraph(outputEntity));
 			case "getEdge":
 			{
-				Graph edges = resolveGetVertexOrEdge(Graph.Component.kEdge, subject, arguments, ToGraph(outputEntity));
+				Graph edges = resolveGetEdge(Graph.Component.kEdge, subject, arguments, ToGraph(outputEntity));
 				Graph outputGraph = (Graph) outputEntity;
 				if(outputGraph == null)
 				{
@@ -597,6 +585,7 @@ public class Resolver
 											  String methodName,
 											  ArrayList<ParseExpression> arguments)
 	{
+		logger.log(Level.SEVERE, "GraphMetadata operations are not supported.");
 		throw new RuntimeException("No GraphMetadata method is supported yet");
 	}
 
@@ -645,6 +634,7 @@ public class Resolver
 	private GraphMetadata resolveGraphMetadataVariable(ParseVariable var,
 													   GraphMetadata lhsMetadata)
 	{
+		logger.log(Level.SEVERE, "GraphMetadata operations are not supported.");
 		assert var.getType().getTypeID() == TypeID.kGraphMetadata;
 		String varGraphMetadata = env.lookup(var.getName().getValue());
 		if(varGraphMetadata == null)
@@ -672,10 +662,10 @@ public class Resolver
 		{
 			outputGraph = allocateEmptyGraph();
 		}
-		ArrayList<String> vertices = new ArrayList<String>();
+		ArrayList<String> vertices = new ArrayList<>();
 		for(ParseExpression e : operands)
 		{
-			if(e.getExpressionType() != ParseExpression.ExpressionType.kLiteral)
+			if(e.getExpressionType() != ExpressionType.kLiteral)
 			{
 				throw new RuntimeException(
 						"Invalid argument at " + e.getLocationString() + ": expected integer literal");
@@ -701,7 +691,7 @@ public class Resolver
 		ArrayList<String> edges = new ArrayList<String>();
 		for(ParseExpression e : operands)
 		{
-			if(e.getExpressionType() != ParseExpression.ExpressionType.kLiteral)
+			if(e.getExpressionType() != ExpressionType.kLiteral)
 			{
 				throw new RuntimeException(
 						"Invalid argument at " + e.getLocationString() + ": expected integer literal");
@@ -718,15 +708,43 @@ public class Resolver
 		return outputGraph;
 	}
 
-	private Graph resolveGetVertexOrEdge(Graph.Component component,
-										 Graph subjectGraph,
-										 ArrayList<ParseExpression> arguments,
-										 Graph outputGraph)
+	private Graph resolveGetEdge(Graph.Component component,
+								 Graph subjectGraph,
+								 ArrayList<ParseExpression> arguments,
+								 Graph outputGraph)
 	{
 		if(arguments.size() > 1)
 		{
 			throw new RuntimeException(
-					"Invalid number of arguments for getVertex/getEdge: expected 0 or 1");
+					"Invalid number of arguments for GetEdge: expected 0 or 1");
+		}
+
+		if(arguments.isEmpty())
+		{
+			// Get all the edges.
+			if(outputGraph == null)
+			{
+				outputGraph = allocateEmptyGraph();
+			}
+			instructions.add(new GetEdge(outputGraph, subjectGraph, null, null, null));
+
+			return outputGraph;
+		}
+		else
+		{
+			return resolveGetVertexOrEdgePredicate(component, subjectGraph, arguments.get(0), outputGraph);
+		}
+	}
+
+	private Graph resolveGetVertex(Graph.Component component,
+								   Graph subjectGraph,
+								   ArrayList<ParseExpression> arguments,
+								   Graph outputGraph)
+	{
+		if(arguments.size() > 1)
+		{
+			throw new RuntimeException(
+					"Invalid number of arguments for GetVertex: expected 0 or 1");
 		}
 
 		if(arguments.isEmpty())
@@ -736,20 +754,8 @@ public class Resolver
 			{
 				outputGraph = allocateEmptyGraph();
 			}
+			instructions.add(new GetVertex(outputGraph, subjectGraph, null, null, null));
 
-			StringBuilder sqlQuery = new StringBuilder();
-			sqlQuery.append("INSERT INTO " + outputGraph.getTableName(component) +
-					" SELECT id FROM " + Graph.GetBaseAnnotationTableName(component));
-			if(!spade.query.quickstep.kernel.Environment.IsBaseGraph(subjectGraph))
-			{
-				String analyzeQuery =
-						"\\analyzerange " + subjectGraph.getTableName(component) + "\n";
-				instructions.add(new EvaluateQuery(analyzeQuery));
-				sqlQuery.append(" WHERE id IN (SELECT id FROM " +
-						subjectGraph.getTableName(component) + ")");
-			}
-			sqlQuery.append(" GROUP BY id;");
-			instructions.add(new EvaluateQuery(sqlQuery.toString()));
 			return outputGraph;
 		}
 		else
@@ -763,7 +769,7 @@ public class Resolver
 												  ParseExpression expression,
 												  Graph outputGraph)
 	{
-		if(expression.getExpressionType() != ParseExpression.ExpressionType.kOperation)
+		if(expression.getExpressionType() != ExpressionType.kOperation)
 		{
 			throw new RuntimeException(
 					"Unexpected expression at " + expression.getLocationString());
@@ -854,11 +860,11 @@ public class Resolver
 
 		ParseExpression lhs = operands.get(0);
 		ParseExpression rhs = operands.get(1);
-		if(lhs.getExpressionType() != ParseExpression.ExpressionType.kName)
+		if(lhs.getExpressionType() != ExpressionType.kName)
 		{
 			throw new RuntimeException("Unexpected operand at " + lhs.getLocationString());
 		}
-		if(rhs.getExpressionType() != ParseExpression.ExpressionType.kLiteral)
+		if(rhs.getExpressionType() != ExpressionType.kLiteral)
 		{
 			throw new RuntimeException("Unexpected operand at " + rhs.getLocationString());
 		}
@@ -870,26 +876,14 @@ public class Resolver
 		{
 			outputGraph = allocateEmptyGraph();
 		}
-
-		StringBuilder sqlQuery = new StringBuilder();
-		sqlQuery.append("INSERT INTO " + outputGraph.getTableName(component) +
-				" SELECT id FROM " + Graph.GetBaseAnnotationTableName(component) + " WHERE");
-		if(!field.equals("*"))
+		if(component == Graph.Component.kVertex)
 		{
-			sqlQuery.append(" field = " + formatString(field) + " AND");
+			instructions.add(new GetVertex(outputGraph, subjectGraph, field, op, value));
 		}
-		sqlQuery.append(" value " + op + " " + formatString(value));
-		if(!Environment.IsBaseGraph(subjectGraph))
+		else if(component == Graph.Component.kEdge)
 		{
-			String analyzeQuery =
-					"\\analyzerange " + subjectGraph.getTableName(component) + "\n";
-			instructions.add(new EvaluateQuery(analyzeQuery));
-			sqlQuery.append(" AND id IN (SELECT id FROM " +
-					subjectGraph.getTableName(component) + ")");
+			instructions.add(new GetEdge(outputGraph, subjectGraph, field, op, value));
 		}
-		sqlQuery.append(" GROUP BY id;");
-		instructions.add(new EvaluateQuery(sqlQuery.toString()));
-
 		return outputGraph;
 	}
 
@@ -980,7 +974,7 @@ public class Resolver
 									  ArrayList<ParseExpression> arguments,
 									  Graph outputGraph)
 	{
-		ArrayList<String> fields = new ArrayList<String>();
+		ArrayList<String> fields = new ArrayList<>();
 		for(ParseExpression e : arguments)
 		{
 			fields.add(resolveString(e));
@@ -1041,6 +1035,7 @@ public class Resolver
 											 ArrayList<ParseExpression> arguments,
 											 GraphMetadata outputMetadata)
 	{
+		logger.log(Level.SEVERE, "GraphMetadata operations are not supported.");
 		if(arguments.size() != 2)
 		{
 			throw new RuntimeException(
@@ -1133,6 +1128,14 @@ public class Resolver
 										ArrayList<ParseExpression> arguments,
 										Graph outputGraph)
 	{
+		// This feature is not present for Neo4j
+		// TODO: implement this for Neo4j if possible
+		if(currentStorageName.equalsIgnoreCase("Neo4j"))
+		{
+			logger.log(Level.SEVERE, "This feature is not present for Neo4j.");
+			throw new RuntimeException("This feature is not present for Neo4j.");
+		}
+
 		// TODO: handle subject?
 		if(arguments.size() != 1)
 		{
@@ -1184,7 +1187,7 @@ public class Resolver
 
 	private Integer resolveInteger(ParseExpression expression)
 	{
-		if(expression.getExpressionType() != ParseExpression.ExpressionType.kLiteral)
+		if(expression.getExpressionType() != ExpressionType.kLiteral)
 		{
 			throw new RuntimeException(
 					"Invalid value at " + expression.getLocationString() +
@@ -1202,7 +1205,7 @@ public class Resolver
 
 	private String resolveString(ParseExpression expression)
 	{
-		if(expression.getExpressionType() != ParseExpression.ExpressionType.kLiteral)
+		if(expression.getExpressionType() != ExpressionType.kLiteral)
 		{
 			throw new RuntimeException(
 					"Invalid value at " + expression.getLocationString() +
@@ -1220,7 +1223,7 @@ public class Resolver
 
 	private String resolveNameAsString(ParseExpression expression)
 	{
-		if(expression.getExpressionType() != ParseExpression.ExpressionType.kName)
+		if(expression.getExpressionType() != ExpressionType.kName)
 		{
 			throw new RuntimeException(
 					"Invalid value at " + expression.getLocationString() +
@@ -1238,51 +1241,10 @@ public class Resolver
 
 	private GraphMetadata allocateEmptyGraphMetadata()
 	{
+		logger.log(Level.SEVERE, "GraphMetadata operations are not supported.");
 		GraphMetadata metadata = env.allocateGraphMetadata();
 		instructions.add(new CreateEmptyGraphMetadata(metadata));
 		return metadata;
-	}
-
-	private String formatString(String str)
-	{
-		StringBuilder sb = new StringBuilder();
-		boolean escaped = false;
-		for(int i = 0; i < str.length(); ++i)
-		{
-			char c = str.charAt(i);
-			if(c < 32)
-			{
-				switch(c)
-				{
-					case '\b':
-						sb.append("\\b");
-						break;
-					case '\n':
-						sb.append("\\n");
-						break;
-					case '\r':
-						sb.append("\\r");
-						break;
-					case '\t':
-						sb.append("\\t");
-						break;
-					default:
-						sb.append("\\x" + Integer.toHexString(c));
-						break;
-				}
-				escaped = true;
-			}
-			else
-			{
-				if(c == '\\')
-				{
-					sb.append('\\');
-					escaped = true;
-				}
-				sb.append(c);
-			}
-		}
-		return (escaped ? "e" : "") + "'" + sb.toString() + "'";
 	}
 
 	class ExpressionStream

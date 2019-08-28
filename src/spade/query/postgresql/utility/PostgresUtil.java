@@ -89,4 +89,48 @@ public class PostgresUtil
 		logger.log(Level.SEVERE, "GetTimestampRange is not supported.");
 		throw new UnsupportedOperationException("GetTimestampRange is not supported.");
 	}
+
+	public static String formatString(String str, boolean field)
+	{
+		if(str == null)
+			return str;
+		StringBuilder sb = new StringBuilder(100);
+		boolean escaped = false;
+		for(int i = 0; i < str.length(); ++i)
+		{
+			char c = str.charAt(i);
+			if(c < 32)
+			{
+				switch(c)
+				{
+					case '\b':
+						sb.append("\\b");
+						break;
+					case '\n':
+						sb.append("\\n");
+						break;
+					case '\r':
+						sb.append("\\r");
+						break;
+					case '\t':
+						sb.append("\\t");
+						break;
+					default:
+						sb.append("\\x" + Integer.toHexString(c));
+						break;
+				}
+				escaped = true;
+			}
+			else
+			{
+				if(c == '\\')
+				{
+					sb.append('\\');
+					escaped = true;
+				}
+				sb.append(c);
+			}
+		}
+		return (escaped ? "e" : "") + (field ? "\"" : "'") + sb.toString() + (field ? "\"" : "'");
+	}
 }

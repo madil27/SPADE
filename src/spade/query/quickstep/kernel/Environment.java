@@ -213,4 +213,8 @@ public class Environment extends TreeStringSerializable
 			inline_field_values.add(entry.getValue());
 		}
 	}
+
+	public void setResultGraphName(String lhs)
+	{
+	}
 }

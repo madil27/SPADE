@@ -225,7 +225,6 @@ public class Resolver
 					{
 						resultGraph = allocateEmptyGraph();
 						instructions.add(new UnionGraph(resultGraph, lhsGraph));
-						instructions.add(new UnionGraph(resultGraph, lhsGraph));
 					}
 					resolveGraphExpression(rhs, resultGraph, true);
 					break;
@@ -672,11 +671,11 @@ public class Resolver
 						"Invalid argument at " + e.getLocationString() + ": expected integer literal");
 			}
 			TypedValue value = ((ParseLiteral) e).getLiteralValue();
-//      if (value.getType().getTypeID() != TypeID.kInteger)
-//      {
-//        throw new RuntimeException(
-//            "Invalid argument type at " + e.getLocationString() + ": expected integer");
-//      }
+			if(value.getType().getTypeID() != TypeID.kInteger)
+			{
+				throw new RuntimeException(
+						"Invalid argument type at " + e.getLocationString() + ": expected integer");
+			}
 			vertices.add(String.valueOf(value.getValue()));
 		}
 		instructions.add(new InsertLiteralVertex(outputGraph, vertices));
@@ -698,11 +697,11 @@ public class Resolver
 						"Invalid argument at " + e.getLocationString() + ": expected integer literal");
 			}
 			TypedValue value = ((ParseLiteral) e).getLiteralValue();
-//      if (value.getType().getTypeID() != TypeID.kInteger)
-//      {
-//        throw new RuntimeException(
-//            "Invalid argument type at " + e.getLocationString() + ": expected integer");
-//      }
+			if(value.getType().getTypeID() != TypeID.kInteger)
+			{
+				throw new RuntimeException(
+						"Invalid argument type at " + e.getLocationString() + ": expected integer");
+			}
 			edges.add(String.valueOf(value.getValue()));
 		}
 		instructions.add(new InsertLiteralEdge(outputGraph, edges));
@@ -1129,6 +1128,14 @@ public class Resolver
 										ArrayList<ParseExpression> arguments,
 										Graph outputGraph)
 	{
+		// This feature is not present for Neo4j
+		// TODO: implement this for Neo4j if possible
+		if(currentStorageName.equalsIgnoreCase("Neo4j"))
+		{
+			logger.log(Level.SEVERE, "This feature is not present for Neo4j.");
+			throw new RuntimeException("This feature is not present for Neo4j.");
+		}
+
 		// TODO: handle subject?
 		if(arguments.size() != 1)
 		{
@@ -1238,50 +1245,6 @@ public class Resolver
 		GraphMetadata metadata = env.allocateGraphMetadata();
 		instructions.add(new CreateEmptyGraphMetadata(metadata));
 		return metadata;
-	}
-
-	public static String formatString(String str, boolean field)
-	{
-		if(str == null)
-			return str;
-		StringBuilder sb = new StringBuilder(100);
-		boolean escaped = false;
-		for(int i = 0; i < str.length(); ++i)
-		{
-			char c = str.charAt(i);
-			if(c < 32)
-			{
-				switch(c)
-				{
-					case '\b':
-						sb.append("\\b");
-						break;
-					case '\n':
-						sb.append("\\n");
-						break;
-					case '\r':
-						sb.append("\\r");
-						break;
-					case '\t':
-						sb.append("\\t");
-						break;
-					default:
-						sb.append("\\x" + Integer.toHexString(c));
-						break;
-				}
-				escaped = true;
-			}
-			else
-			{
-				if(c == '\\')
-				{
-					sb.append('\\');
-					escaped = true;
-				}
-				sb.append(c);
-			}
-		}
-		return (escaped ? "e" : "") + (field ? "\"" : "'") + sb.toString() + (field ? "\"" : "'");
 	}
 
 	class ExpressionStream

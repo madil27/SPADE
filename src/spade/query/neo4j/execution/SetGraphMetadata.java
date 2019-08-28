@@ -103,26 +103,6 @@ public class SetGraphMetadata extends Instruction
 	@Override
 	public void execute(Environment env, ExecutionContext ctx)
 	{
-		Neo4jExecutor ns = ctx.getExecutor();
-
-		String targetVertexTable = targetMetadata.getVertexTableName();
-		String targetEdgeTable = targetMetadata.getEdgeTableName();
-		String sourceVertexTable = sourceGraph.getVertexTableName();
-		String sourceEdgeTable = sourceGraph.getEdgeTableName();
-
-		if(component == Component.kVertex || component == Component.kBoth)
-		{
-			ns.executeQuery("INSERT INTO " + targetVertexTable +
-					" SELECT  " + PRIMARY_KEY + ", " + FormatStringLiteral(name) + ", " + FormatStringLiteral(value) +
-					" FROM " + sourceVertexTable + " GROUP BY " + PRIMARY_KEY + ";");
-		}
-
-		if(component == Component.kEdge || component == Component.kBoth)
-		{
-			ns.executeQuery("INSERT INTO " + targetEdgeTable +
-					" SELECT " + PRIMARY_KEY + ", " + FormatStringLiteral(name) + ", " + FormatStringLiteral(value) +
-					" FROM " + sourceEdgeTable + " GROUP BY " + PRIMARY_KEY + ";");
-		}
 	}
 
 	@Override

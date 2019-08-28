@@ -27,9 +27,7 @@ import spade.storage.neo4j.Neo4jExecutor;
 
 import java.util.ArrayList;
 
-import static spade.query.neo4j.kernel.Resolver.formatString;
-import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
-import static spade.query.neo4j.utility.CommonVariables.RelationshipTypes.EDGE;
+import static spade.query.neo4j.utility.Neo4jUtil.formatString;
 import static spade.query.neo4j.utility.Neo4jUtil.formatSymbol;
 
 /**
@@ -70,7 +68,7 @@ public class GetEdge extends Instruction
 				// TODO: handle wild card columns
 				if(!field.equals("*"))
 				{
-					condition += " AND x." + field + operation + formatString(value, false);
+					condition += " AND x." + field + operation + formatString(value);
 				}
 			}
 		}
@@ -80,7 +78,7 @@ public class GetEdge extends Instruction
 			{
 				if(!field.equals("*"))
 				{
-					condition += " x." + field + operation + formatString(value, false);
+					condition += " x." + field + operation + formatString(value);
 				}
 
 			}
@@ -115,5 +113,4 @@ public class GetEdge extends Instruction
 		inline_field_names.add("value");
 		inline_field_values.add(value);
 	}
-
 }

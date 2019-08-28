@@ -17,22 +17,20 @@
  along with this program. If not, see <http://www.gnu.org/licenses/>.
  --------------------------------------------------------------------------------
  */
-package spade.query.neo4j.execution;
+package spade.query.quickstep.execution;
 
-import spade.query.neo4j.entities.Graph;
-import spade.query.neo4j.kernel.Environment;
-import spade.query.neo4j.utility.Neo4jUtil;
-import spade.query.neo4j.utility.TreeStringSerializable;
-import spade.storage.neo4j.Neo4jExecutor;
+import spade.query.quickstep.entities.Graph;
+import spade.query.quickstep.kernel.Environment;
+import spade.query.quickstep.utility.TreeStringSerializable;
 
 import java.util.ArrayList;
 
-import static spade.query.neo4j.utility.Neo4jUtil.formatString;
+import static spade.query.quickstep.utility.QuickstepUtil.formatString;
 
 /**
- * Get the a set of vertices in a graph.
+ * Get the a set of edges in a graph.
  */
-public class GetVertex extends Instruction
+public class GetEdge extends Instruction
 {
 	// Output graph.
 	private Graph targetGraph;
@@ -42,7 +40,7 @@ public class GetVertex extends Instruction
 	private String operation;
 	private String value;
 
-	public GetVertex(Graph targetGraph, Graph subjectGraph, String field, String operation, String value)
+	public GetEdge(Graph targetGraph, Graph subjectGraph, String field, String operation, String value)
 	{
 		this.targetGraph = targetGraph;
 		this.subjectGraph = subjectGraph;
@@ -54,27 +52,31 @@ public class GetVertex extends Instruction
 	@Override
 	public void execute(Environment env, ExecutionContext ctx)
 	{
-		Neo4jExecutor ns = ctx.getExecutor();
-		String subjectVertexTable = subjectGraph.getVertexTableName();
-		String targetVertexTable = targetGraph.getVertexTableName();
-		String condition = "";
+		StringBuilder sqlQuery = new StringBuilder(100);
+		sqlQuery.append("INSERT INTO " + targetGraph.getEdgeTableName() +
+				" SELECT id FROM " + Graph.GetBaseEdgeAnnotationTableName());
 		if(field != null)
 		{
-			// TODO: handle wild card columns
+			sqlQuery.append(" WHERE");
 			if(!field.equals("*"))
 			{
-				condition += "x." + field + operation;
-				condition += formatString(value);
+				sqlQuery.append(" field = " + formatString(field) + " AND");
+			}
+			sqlQuery.append(" value " + operation + " " + formatString(value));
+			if(!Environment.IsBaseGraph(subjectGraph))
+			{
+				sqlQuery.append("\\analyzerange " + subjectGraph.getEdgeTableName() + "\n");
+				sqlQuery.append(" AND id IN (SELECT id FROM " +
+						subjectGraph.getEdgeTableName() + ")");
 			}
 		}
-		String cypherQuery = Neo4jUtil.vertexLabelQuery(condition, subjectVertexTable, targetVertexTable);
-		ns.executeQuery(cypherQuery);
+		sqlQuery.append(" GROUP BY id;");
 	}
 
 	@Override
 	public String getLabel()
 	{
-		return "GetVertex";
+		return "GetEdge";
 	}
 
 	@Override
@@ -96,7 +98,5 @@ public class GetVertex extends Instruction
 		inline_field_values.add(operation);
 		inline_field_names.add("value");
 		inline_field_values.add(value);
-
 	}
-
 }
