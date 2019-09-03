@@ -3,6 +3,7 @@ package spade.storage.neo4j;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Result;
+import spade.query.quickgrail.core.utility.StorageExecutor;
 import spade.storage.Neo4j;
 
 import java.util.HashSet;
@@ -12,13 +13,13 @@ import java.util.Map;
 import java.util.Set;
 
 import static spade.core.AbstractQuery.getCurrentStorage;
-import static spade.query.neo4j.utility.CommonVariables.EDGE_ALIAS;
-import static spade.query.neo4j.utility.CommonVariables.VERTEX_ALIAS;
+import static spade.query.quickgrail.neo4j.utility.CommonVariables.EDGE_ALIAS;
+import static spade.query.quickgrail.neo4j.utility.CommonVariables.VERTEX_ALIAS;
 
 /**
  * Helper class for encapsulation of related methods.
  */
-public class Neo4jExecutor
+public class Neo4jExecutor extends StorageExecutor
 {
 	private Neo4j currentStorage;
 

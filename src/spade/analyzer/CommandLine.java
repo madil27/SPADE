@@ -35,9 +35,10 @@ import spade.core.AbstractAnalyzer;
 import spade.core.AbstractQuery;
 import spade.core.AbstractStorage;
 import spade.core.Kernel;
-import spade.query.neo4j.QuickGrailExecutor;
+import spade.query.quickgrail.core.kernel.QuickGrailExecutor;
 
 import static spade.core.AbstractQuery.getCurrentStorage;
+import static spade.core.AbstractQuery.getCurrentStorageName;
 
 public class CommandLine extends AbstractAnalyzer
 {
@@ -113,10 +114,11 @@ public class CommandLine extends AbstractAnalyzer
         public QueryConnection(Socket socket)
         {
             super(socket);
+			AbstractStorage currentStorage = getCurrentStorage();
             this.executor = new QuickGrailExecutor();
-            if(getCurrentStorage() != null)
+			if(currentStorage != null)
             {
-                this.executor.createEnvironment();
+				this.executor.createEnvironment(getCurrentStorageName().toLowerCase());
             }
         }
 
@@ -168,7 +170,7 @@ public class CommandLine extends AbstractAnalyzer
                 boolean success = parseSetStorage(query, outputStream);
                 if(success)
                 {
-                    executor.createEnvironment();
+					executor.createEnvironment(getCurrentStorageName().toLowerCase());
                 }
                 return false;
             }

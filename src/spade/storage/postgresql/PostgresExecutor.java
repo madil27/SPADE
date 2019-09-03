@@ -21,6 +21,7 @@ package spade.storage.postgresql;
 
 import org.apache.commons.lang3.StringUtils;
 import spade.core.AbstractStorage;
+import spade.query.quickgrail.core.utility.StorageExecutor;
 import spade.storage.PostgreSQL;
 
 import java.sql.ResultSet;
@@ -30,7 +31,7 @@ import static spade.core.AbstractQuery.getCurrentStorage;
 /**
  * Helper class for encapsulation of related methods.
  */
-public class PostgresExecutor
+public class PostgresExecutor extends StorageExecutor
 {
 	/**
      * Submit a query and wait for the result.

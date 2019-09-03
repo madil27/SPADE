@@ -70,6 +70,13 @@ public abstract class AbstractQuery<R>
         return currentStorage;
     }
 
+	public static String getCurrentStorageName()
+	{
+		if(currentStorage != null)
+			return currentStorage.getClass().getSimpleName();
+		return null;
+	}
+
     public void register()
     {
         try
