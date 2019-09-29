@@ -710,6 +710,9 @@ public class AuditEventReader {
 				}else if (type.equals(RECORD_TYPE_SYSCALL)) {
 					Map<String, String> eventData = CommonFunctions.parseKeyValPairs(messageData);
 					String commValue = _parseAuditString(line, " comm=");
+					String dataValue = _parseAuditString(line, " dataTransferred=");
+					logger.log(Level.INFO, "ADIL Data Value in AuditEventReader" + dataValue);
+					eventData.put("dataTransferred", dataValue);
 					eventData.put(COMM, commValue);
 					eventData.put(TIME, time);
 					auditRecordKeyValues.putAll(eventData);

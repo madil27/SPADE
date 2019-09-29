@@ -4219,33 +4219,40 @@ public class Audit extends AbstractReporter {
 			String pid, String fd, ArtifactIdentifier identifier, 
 			String bytesTransferred, String offset, boolean incoming){
 
+		// logger.log(Level.SEVERE, "PUTIO INVOKED 1!!");
 		boolean isNetworkUdp = false;
 		if(identifier instanceof NetworkSocketIdentifier){
 			if(!USE_SOCK_SEND_RCV){
+				// logger.log(Level.SEVERE, "PUTIO INVOKED 2!!");
 				return;
 			}
 			isNetworkUdp = isUdp(identifier);
 		}else{ // all else are local i.e. file io include unix
 			if(!USE_READ_WRITE){
+				// logger.log(Level.SEVERE, "PUTIO INVOKED 3!!");
 				return;
 			}
 			if(identifier instanceof UnixSocketIdentifier || identifier instanceof UnnamedUnixSocketPairIdentifier){
 				if(!globals.unixSockets){
+					// logger.log(Level.SEVERE, "PUTIO INVOKED 4!!");
 					return;
 				}
 			}
 		}
-		
+
+		// logger.log(Level.SEVERE, "PUTIO INVOKED 5!!");
 		if(identifier == null){
 			identifier = addUnknownFd(pid, fd);
 		}
 		
+		// logger.log(Level.SEVERE, "PUTIO INVOKED 6!!");
 		if(isNetworkUdp){
 			// Since saddr present that means that it is SOCK_DGRAM.
 			// Epoch for all SOCK_DGRAM
 			artifactManager.artifactCreated(identifier);
 		}
 
+		// logger.log(Level.SEVERE, "PUTIO INVOKED 7!!");
 		Process process = processManager.handleProcessFromSyscall(eventData);
 		Artifact artifact = null;
 		AbstractEdge edge = null;
@@ -4257,7 +4264,18 @@ public class Audit extends AbstractReporter {
 			artifact = putArtifactFromSyscall(eventData, identifier);
 			edge = new WasGeneratedBy(artifact, process);
 		}
+		// logger.log(Level.INFO, "PUTIO INVOKED audit.java 3!!");
 		edge.addAnnotation(OPMConstants.EDGE_SIZE, bytesTransferred);
+		// addition for dataTransferred edge
+		// logger.log(Level.INFO, "ADIL BEFORE data transferred in Audit.java AUDIT.JAVA");
+
+		String dataTransferred = eventData.get("dataTransferred");
+		logger.log(Level.INFO, "ADIL AUDIT.JAVA BEFORE " + dataTransferred);
+
+        if(dataTransferred != null){
+        	logger.log(Level.INFO, "IN CONDITION ADIL data transferred in Audit.java AUDIT.JAVA: " + dataTransferred);
+            edge.addAnnotation("data transferred", dataTransferred);
+        }
 		if(offset != null){
 			edge.addAnnotation(OPMConstants.EDGE_OFFSET, offset);	
 		}
